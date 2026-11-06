@@ -3984,9 +3984,15 @@ function updateIntroInfo(){
     }, { passive: false });
   })();
 
+  window.toggleCityBuildings = function(show){
+    if(typeof MESH !== 'undefined' && MESH) MESH.visible = show;
+    if(typeof INST !== 'undefined' && INST) INST.visible = show;
+    showSpatialToast(show ? '🏢 주변 도심 건물 표시' : '🌊 청계천 단독 평가: 주변 건물 숨김');
+  };
+
   var LEGO_BLOCKS = [
-    { key: 'gj', label: '🏯 근정전 블록', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
-    { key: 'cgc', label: '🌊 청계천 수로 블록', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 2, camBack: 80, camUp: 45 }
+    { key: 'gj', label: '🏯 근정전 블록 (지면착지·기와정상화)', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
+    { key: 'cgc', label: '🌊 청계천 단독 뷰 (주변건물 숨김)', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 2, camBack: 70, camUp: 40 }
   ];
   var legoLoaded = {};
   window.legoView = function(key, ly, up, back){
@@ -4086,6 +4092,12 @@ function updateIntroInfo(){
   window.flyToLegoBlock = function(key){
     var def = LEGO_BLOCKS.find(function(d){ return d.key === key; });
     if(!def) return;
+    // 청계천 블록 이동 시 주변 건물 자동 숨김 (수로 시야 확보)
+    if(key === 'cgc') {
+      window.toggleCityBuildings(false);
+    } else {
+      window.toggleCityBuildings(true);
+    }
     showSpatialToast('🧱 외부 3D 블록 불러오는 중...');
     legoLoad(def).then(function(h){
       customOrbitTarget = null;
@@ -4100,7 +4112,32 @@ function updateIntroInfo(){
   (function(){
     var bar = document.createElement('div');
     bar.id = 'lego-block-bar';
-    bar.style.cssText = 'position:fixed;left:12px;top:270px;z-index:60;display:flex;flex-direction:column;gap:8px;';
+    bar.style.cssText = 'position:fixed;left:12px;top:260px;z-index:60;display:flex;flex-direction:column;gap:8px;';
+    
+    // 건물 숨김/표시 토글 버튼 추가
+    var bldBtn = document.createElement('button');
+    bldBtn.textContent = '🏢 건물 숨김/표시 토글';
+    bldBtn.style.cssText = 'padding:8px 12px;border-radius:12px;border:1px solid rgba(251,191,36,.8);background:rgba(15,23,42,.92);color:#fef08a;font:600 13px sans-serif;cursor:pointer;';
+    bldBtn.onclick = function(){
+      var nowVis = (typeof MESH !== 'undefined' && MESH) ? !MESH.visible : true;
+      window.toggleCityBuildings(nowVis);
+    };
+    bar.appendChild(bldBtn);
+
+    // 텍스트 라벨 끄기/켜기 토글 버튼 추가 (지도 시야 확보)
+    var lblBtn = document.createElement('button');
+    lblBtn.textContent = '👁️ 라벨 숨김 (지도 시야 확보)';
+    lblBtn.style.cssText = 'padding:8px 12px;border-radius:12px;border:1px solid rgba(56,189,248,.8);background:rgba(15,23,42,.92);color:#7dd3fc;font:600 13px sans-serif;cursor:pointer;';
+    lblBtn.onclick = function(){
+      var layer = document.getElementById('ar-callout-layer');
+      if(layer){
+        var isHidden = layer.style.display === 'none';
+        layer.style.display = isHidden ? '' : 'none';
+        lblBtn.textContent = isHidden ? '👁️ 라벨 숨김 (지도 시야 확보)' : '🏷️ 라벨 표시';
+        showSpatialToast(isHidden ? '라벨 표시' : '지도 시야 개방: 라벨 숨김');
+      }
+    };
+    bar.appendChild(lblBtn);
     LEGO_BLOCKS.forEach(function(d){
       var b = document.createElement('button');
       b.textContent = d.label;
