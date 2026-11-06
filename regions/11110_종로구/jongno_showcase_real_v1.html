@@ -2998,6 +2998,7 @@ function updateIntroInfo(){
       w: 44, d: 32, baseH: 10.5, colH: 11.5, roofH: 11.5, doubleRoof: true,
       courtyardW: 132, courtyardD: 92, courtyardOffsetZ: 34, stoneColor: 0xffffff
     });
+    window.__procGJ = gjHall;
     for(var rk = 0; rk < 6; rk++){
       [-14, 14].forEach(function(rx){
         var st = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.8, 1.8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
@@ -3975,6 +3976,121 @@ function updateIntroInfo(){
       camera.position.copy(look).add(v);
       camera.lookAt(look);
     }, { passive: false });
+  })();
+
+  var LEGO_BLOCKS = [
+    { key: 'gj', label: '🏯 근정전 블록', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
+    { key: 'cgc', label: '🌊 청계천 수로 블록', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 150, camUp: 70 }
+  ];
+  var legoLoaded = {};
+  window.legoView = function(key, ly, up, back){
+    var h = legoLoaded[key]; if(!h) return null;
+    var p = h.position;
+    targetLookAt = new THREE.Vector3(p.x, p.y + ly, p.z);
+    targetCamPos = new THREE.Vector3(p.x + 10, p.y + up, p.z + back);
+    return [p.x, p.y, p.z, h.rotation.y, camera.position.y];
+  };
+  function legoDecodeB64(uri){
+    var b = atob(uri.split(',')[1]);
+    var u = new Uint8Array(b.length);
+    for(var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return u.buffer;
+  }
+  function legoReadAccessor(g, bufs, idx){
+    var a = g.accessors[idx], bv = g.bufferViews[a.bufferView];
+    var ncomp = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[a.type];
+    var Ctor = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array }[a.componentType];
+    var off = (bv.byteOffset || 0) + (a.byteOffset || 0);
+    return new Ctor(bufs[bv.buffer], off, a.count * ncomp);
+  }
+  function legoBuild(g, texture){
+    var bufs = g.buffers.map(function(b){ return legoDecodeB64(b.uri); });
+    var mats = g.materials.map(function(m){
+      var pb = m.pbrMetallicRoughness || {};
+      var mt = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: pb.roughnessFactor == null ? 0.8 : pb.roughnessFactor,
+        metalness: pb.metallicFactor || 0,
+        side: m.doubleSided ? THREE.DoubleSide : THREE.FrontSide
+      });
+      return mt;
+    });
+    var root = new THREE.Group();
+    g.nodes.forEach(function(nd){
+      if(nd.mesh == null) return;
+      var mesh = g.meshes[nd.mesh];
+      mesh.primitives.forEach(function(p){
+        var geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(legoReadAccessor(g, bufs, p.attributes.POSITION), 3));
+        if(p.attributes.NORMAL != null) geo.setAttribute('normal', new THREE.BufferAttribute(legoReadAccessor(g, bufs, p.attributes.NORMAL), 3));
+        if(p.attributes.TEXCOORD_0 != null) geo.setAttribute('uv', new THREE.BufferAttribute(legoReadAccessor(g, bufs, p.attributes.TEXCOORD_0), 2));
+        if(p.indices != null) geo.setIndex(new THREE.BufferAttribute(legoReadAccessor(g, bufs, p.indices), 1));
+        if(p.attributes.NORMAL == null) geo.computeVertexNormals();
+        var m = new THREE.Mesh(geo, mats[p.material || 0]);
+        m.name = nd.name || '';
+        if(nd.translation) m.position.set(nd.translation[0], nd.translation[1], nd.translation[2]);
+        if(nd.scale) m.scale.set(nd.scale[0], nd.scale[1], nd.scale[2]);
+        root.add(m);
+      });
+    });
+    return root;
+  }
+  function legoLoad(def){
+    return new Promise(function(resolve, reject){
+      if(legoLoaded[def.key]) return resolve(legoLoaded[def.key]);
+      var base = encodeURI(def.dir);
+      Promise.all([
+        fetch(base + 'block_manifest.json').then(function(r){ return r.json(); }),
+        fetch(base + 'model_lod3.gltf').then(function(r){ return r.json(); })
+      ]).then(function(arr){
+        var man = arr[0], gl = arr[1];
+        new THREE.TextureLoader().load(base + 'texture_atlas.webp', function(tex){
+          tex.flipY = false;
+          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+          if(THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
+          var model = legoBuild(gl, tex);
+          var holder = new THREE.Group();
+          holder.add(model);
+          var xz = toXZ(man.coordinates[0], man.coordinates[1]);
+          holder.position.set(xz[0], getGroundY(xz[0], xz[1]) + (def.key === 'cgc' ? 0.2 : 0), xz[1]);
+          holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
+          holder.userData.man = man;
+          scene.add(holder);
+          if(def.key === 'gj' && window.__procGJ) window.__procGJ.visible = false;
+          legoLoaded[def.key] = holder;
+          resolve(holder);
+        }, undefined, reject);
+      }).catch(reject);
+    });
+  }
+  window.flyToLegoBlock = function(key){
+    var def = LEGO_BLOCKS.find(function(d){ return d.key === key; });
+    if(!def) return;
+    showSpatialToast('🧱 외부 3D 블록 불러오는 중...');
+    legoLoad(def).then(function(h){
+      customOrbitTarget = null;
+      var p = h.position;
+      targetLookAt = new THREE.Vector3(p.x, p.y + def.lookUp, p.z);
+      targetCamPos = new THREE.Vector3(p.x + def.camBack * 0.35, p.y + def.camUp, p.z + def.camBack);
+      showSpatialToast('🧱 ' + h.userData.man.name + ' 블록 표시 중');
+    }).catch(function(e){
+      showSpatialToast('블록 로딩 실패: ' + e);
+    });
+  };
+  (function(){
+    var bar = document.createElement('div');
+    bar.id = 'lego-block-bar';
+    bar.style.cssText = 'position:fixed;left:12px;top:270px;z-index:60;display:flex;flex-direction:column;gap:8px;';
+    LEGO_BLOCKS.forEach(function(d){
+      var b = document.createElement('button');
+      b.textContent = d.label;
+      b.style.cssText = 'padding:10px 14px;border-radius:14px;border:1px solid rgba(56,189,248,.6);background:rgba(15,23,42,.88);color:#f8fafc;font:600 15px sans-serif;';
+      b.onclick = function(){ window.flyToLegoBlock(d.key); };
+      bar.appendChild(b);
+    });
+    document.body.appendChild(bar);
+    var m = /lego=([a-z]+)/.exec(location.hash || '');
+    if(m) setTimeout(function(){ window.flyToLegoBlock(m[1]); }, 1500);
   })();
 
   buildSpatial3DBeacons();
