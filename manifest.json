@@ -1,0 +1,24 @@
+{
+  "name": "종로 3D 공간정보 디지털트윈",
+  "short_name": "종로 3D",
+  "description": "피망 Phase 1~20 완주 공간 데이터 기반 전국 3D 디지털트윈 모바일 앱",
+  "start_url": "/demo.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23020617'/><polygon points='96,24 168,64 96,104 24,64' fill='%230284c7'/><polygon points='96,104 168,64 168,128 96,168' fill='%230369a1'/><polygon points='96,104 24,64 24,128 96,168' fill='%230ea5e9'/><circle cx='96' cy='96' r='16' fill='%2338bdf8'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23020617'/><polygon points='256,64 448,168 256,272 64,168' fill='%230284c7'/><polygon points='256,272 448,168 448,344 256,448' fill='%230369a1'/><polygon points='256,272 64,168 64,344 256,448' fill='%230ea5e9'/><circle cx='256' cy='256' r='40' fill='%2338bdf8'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b111e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>3AI 디지털 트윈 코리아 · 모바일</title>
+<style>
+  :root{--bg:#0b111e;--panel:#111a2e;--line:rgba(56,189,248,.25);--sky:#38bdf8;--gold:#fbbf24;--txt:#f8fafc;--mut:#94a3b8;--ok:#34d399;--lock:#64748b}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,sans-serif}
+  body{min-height:100vh;padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+  header{padding:calc(16px + env(safe-area-inset-top)) 0 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  h1{font-size:19px;line-height:1.3}
+  .sub{font-size:12.5px;color:var(--mut);margin-top:4px;line-height:1.5}
+  .pc{flex:none;font-size:12.5px;color:var(--sky);border:1px solid var(--line);border-radius:16px;padding:8px 12px;text-decoration:none;min-height:36px;display:inline-flex;align-items:center}
+  .sec{font-size:13px;color:var(--gold);margin:18px 0 8px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .name{font-size:17px;font-weight:700}
+  .code{font-size:12px;color:var(--mut);margin-top:2px}
+  .chip{font-size:12px;border-radius:12px;padding:4px 10px;white-space:nowrap}
+  .chip.open{background:rgba(52,211,153,.15);color:var(--ok);border:1px solid rgba(52,211,153,.4)}
+  .chip.soon{background:rgba(251,191,36,.15);color:var(--gold);border:1px solid rgba(251,191,36,.5)}
+  .chip.lock{background:rgba(100,116,139,.18);color:var(--lock);border:1px solid rgba(100,116,139,.4)}
+  .wx{margin-top:8px;font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px}
+  .wx b{color:var(--txt);font-size:15px}
+  .btn{display:flex;align-items:center;justify-content:center;margin-top:12px;min-height:48px;border-radius:12px;background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;font-size:15px;font-weight:700;text-decoration:none}
+  .btn.off{background:#1e293b;color:var(--lock);pointer-events:none}
+  .near{margin:6px 0 0;min-height:48px;width:100%;border-radius:12px;border:1px solid var(--line);background:#0f2236;color:var(--sky);font-size:15px;font-weight:700}
+  .nearres{font-size:13px;color:var(--mut);margin-top:8px;line-height:1.6}
+  .note{font-size:12px;color:var(--mut);line-height:1.6;margin-top:18px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>3AI 디지털 트윈 코리아</h1>
+    <div class="sub">모바일 · 하루에 한 블럭씩 열립니다</div>
+  </div>
+  <a class="pc" href="../index.html?pc=1">PC 버전</a>
+</header>
+<button class="near" id="near">내 위치에서 가까운 블럭 찾기</button>
+<div class="nearres" id="nearres">위치는 이 폰 안에서만 계산하고 어디에도 저장·전송하지 않습니다.</div>
+<div class="sec">열린 블럭</div>
+<div id="open"></div>
+<div class="sec">오픈 예정</div>
+<div id="soon"></div>
+<p class="note">3D 화면은 두 손가락으로 확대·축소, 한 손가락으로 회전합니다. 화면 아래 패널에서 장소 정보를 볼 수 있고, 오른쪽 버튼으로 낮·밤 조명을 바꿀 수 있습니다. 처음 열 때 지도 데이터를 받느라 몇 초 걸립니다.</p>
+<script>
+var BLOCKS=[
+ {code:"11110",name:"서울 종로구",href:"../regions/11110_%EC%A2%85%EB%A1%9C%EA%B5%AC/jongno_showcase_real_v1.html",at:"2026-11-01T21:00:00+09:00"},
+ {code:"41117",name:"수원 영통구",href:"../regions/41117_%EC%98%81%ED%86%B5%EA%B5%AC/yeongtong_showcase_real_v1.html",at:"2026-10-31T21:00:00+09:00"},
+ {code:"41115",name:"수원 팔달구",href:"../regions/41115_%ED%8C%94%EB%8B%AC%EA%B5%AC/paldal_showcase_real_v3.html",at:"2026-10-30T21:00:00+09:00"},
+ {code:"11680",name:"서울 강남구",href:"../regions/11680_%EA%B0%95%EB%82%A8%EA%B5%AC/gangnam_showcase_real_v1.html",at:"2026-11-02T21:00:00+09:00"},
+ {code:"11140",name:"서울 중구",href:"../regions/11140_%EC%A4%91%EA%B5%AC/junggu_showcase_real_v1.html",at:"2026-11-03T21:00:00+09:00"},
+ {code:"11650",name:"서울 서초구",href:"../regions/11650_%EC%84%9C%EC%B4%88%EA%B5%AC/seocho_showcase_real_v1.html",at:"2026-11-04T21:00:00+09:00"},
+ {code:"11170",name:"서울 용산구",href:"../regions/11170_%EC%9A%A9%EC%82%B0%EA%B5%AC/yongsan_showcase_real_v1.html",at:"2026-11-05T21:00:00+09:00"},
+ {code:"11440",name:"서울 마포구",href:"../regions/11440_%EB%A7%88%ED%8F%AC%EA%B5%AC/mapo_showcase_real_v1.html",at:"2026-11-06T21:00:00+09:00"},
+ {code:"41111",name:"수원 장안구",href:"../regions/41111_%EC%9E%A5%EC%95%88%EA%B5%AC/jangan_showcase_real_v1.html",at:"2026-11-07T21:00:00+09:00"}
+];
+function isToday(d){var n=new Date();return d.getFullYear()==n.getFullYear()&&d.getMonth()==n.getMonth()&&d.getDate()==n.getDate()}
+var WXCACHE={};
+var WXICON={clear:"☀️ 맑음",cloudy:"☁️ 흐림",rain:"🌧️ 비",snow:"❄️ 눈"};
+function loadWx(b,el){
+  var dir=b.href.split("/")[2]; if(!dir||b.href==="")return;
+  var url="../regions/"+dir+"/weather.json";
+  (WXCACHE[url]||(WXCACHE[url]=fetch(url,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).catch(function(){return null}))).then(function(w){
+    if(!w){el.textContent="";return}
+    var n=new Date();el.innerHTML='<span>'+(WXICON[w.condition]||"")+'</span><b>'+Math.round(w.temp_c)+'℃</b><span>· 현지 '+("0"+n.getHours()).slice(-2)+":"+("0"+n.getMinutes()).slice(-2)+' · 기준 '+String(w.as_of).slice(5,16).replace("T"," ")+'</span>';
+  });
+}
+/* STAMP_M */function getStamp(code){try{var d=JSON.parse(localStorage.getItem("3ai_stamps_v1")||"{}");return d[code]||null}catch(e){return null}}
+function fmt(d){return (d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+function render(){
+  var now=Date.now(),o=document.getElementById("open"),s=document.getElementById("soon");o.innerHTML="";s.innerHTML="";
+  BLOCKS.forEach(function(b){
+    var at=new Date(b.at),isOpen=now>=at.getTime()&&b.href;
+    var c=document.createElement("div");c.className="card";
+    c.innerHTML='<div class="row"><div><div class="name"></div><div class="code"></div></div><span class="chip"></span></div><div class="wx"></div><a class="btn"></a>';
+    c.querySelector(".name").textContent=b.name;c.querySelector(".code").textContent="행정구역 코드 "+b.code;
+    var chip=c.querySelector(".chip"),btn=c.querySelector(".btn");
+    if(isOpen){chip.className="chip open";chip.textContent="오픈";btn.href=b.href;btn.textContent="3D로 보기"}
+    else if(isToday(at)){chip.className="chip soon";chip.textContent="오늘 "+("0"+at.getHours()).slice(-2)+":"+("0"+at.getMinutes()).slice(-2)+" 오픈";btn.className="btn off";btn.textContent="오늘 밤 열립니다"}
+    else{chip.className="chip lock";chip.textContent=fmt(at)+" 오픈";btn.className="btn off";btn.textContent="오픈 전"}
+    if(isOpen){loadWx(b,c.querySelector(".wx"));var st=getStamp(b.code);if(st){var sp=document.createElement("div");sp.className="wx";sp.textContent="🏅 탐험 도장 "+st.ids.length+(st.total?"/"+st.total:"");c.insertBefore(sp,c.querySelector(".btn"))}}else{c.querySelector(".wx").remove();}
+    (isOpen?o:s).appendChild(c);
+  });
+}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.btn");if(a&&!a.classList.contains("off")){a.textContent="3D 지도 불러오는 중…";a.style.opacity=".7"}});
+render();setInterval(render,60000);
+var CENT={"11110":[37.5729,126.9794],"41117":[37.2596,127.0463],"41115":[37.2827,127.0170],"11680":[37.5172,127.0473],"11140":[37.5636,126.9976],"11650":[37.4837,127.0324],"11170":[37.5326,126.9906],"11440":[37.5663,126.9019],"41111":[37.3040,127.0100]};
+function km(a,b){var R=6371,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)*Math.sin(dg/2);return 2*R*Math.asin(Math.sqrt(x))}
+document.getElementById("near").addEventListener("click",function(){
+  var out=document.getElementById("nearres");
+  if(!navigator.geolocation){out.textContent="이 브라우저는 위치 기능을 지원하지 않습니다.";return}
+  out.textContent="위치 확인 중…";
+  navigator.geolocation.getCurrentPosition(function(p){
+    var me=[p.coords.latitude,p.coords.longitude],now=Date.now(),best=null;
+    BLOCKS.forEach(function(b){if(now>=new Date(b.at).getTime()&&b.href&&CENT[b.code]){var d=km(me,CENT[b.code]);if(!best||d<best.d)best={b:b,d:d}}});
+    if(!best){out.textContent="열린 블럭이 아직 없습니다.";return}
+    out.innerHTML="";var a=document.createElement("a");a.href=best.b.href;a.className="btn";a.textContent=best.b.name+" 3D로 가기 (약 "+Math.round(best.d)+"km)";out.appendChild(a);
+  },function(){out.textContent="위치 권한이 없거나 이 주소에서는 위치를 쓸 수 없습니다(보안 연결 https 필요). 아래 목록에서 직접 고르세요."},{timeout:8000,maximumAge:600000});
+});
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")){navigator.serviceWorker.register("sw.js").catch(function(){})}
+
+</script>
+</body>
+</html>
