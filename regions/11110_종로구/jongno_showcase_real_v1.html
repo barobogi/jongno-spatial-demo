@@ -656,6 +656,10 @@ async function loadTiles(km, forcedLod, includeGround){
     INST.frustumCulled=false;
     scene.add(INST);
   }
+  if (window.__cityBuildingsVisible === false){
+    if (typeof MESH !== "undefined" && MESH) MESH.visible = false;
+    if (typeof INST !== "undefined" && INST) INST.visible = false;
+  }
   const gt=includeGround ? await loadGround(km, half) : {tiles:0, features:0};
   const ms=(performance.now()-t0).toFixed(0);
   lastBuildingCount=buildings; lastTileCount=need.length;
@@ -3984,7 +3988,9 @@ function updateIntroInfo(){
     }, { passive: false });
   })();
 
+  window.__cityBuildingsVisible = true;
   window.toggleCityBuildings = function(show){
+    window.__cityBuildingsVisible = show;
     if(typeof MESH !== 'undefined' && MESH) MESH.visible = show;
     if(typeof INST !== 'undefined' && INST) INST.visible = show;
     showSpatialToast(show ? '🏢 주변 도심 건물 표시' : '🌊 청계천 단독 평가: 주변 건물 숨김');
@@ -3992,7 +3998,7 @@ function updateIntroInfo(){
 
   var LEGO_BLOCKS = [
     { key: 'gj', label: '🏯 근정전 블록 (지면착지·기와정상화)', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
-    { key: 'cgc', label: '🌊 청계천 단독 뷰 (주변건물 숨김)', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 2, camBack: 70, camUp: 40 }
+    { key: 'cgc', label: '🌊 청계천 단독 뷰 (주변건물 숨김)', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 110, camUp: 75 }
   ];
   var legoLoaded = {};
   window.legoView = function(key, ly, up, back){
