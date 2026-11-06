@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<link rel="manifest" href="../../manifest.json">
+<link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0b111e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -499,10 +499,12 @@ async function loadGround(km, half){
   if (!GMAN) return {tiles:0, features:0};
   const need = GMAN.tiles.filter(t=>inView(t.bbox, half));
   const gpos=[], gcol=[], lpos=[], lcol=[]; let features=0; const TREE_RINGS=[];
-  for (const t of need){
-    let gj;
-    try { gj = await (await fetch('tiles_1000m/ground/tile_g_'+t.ti+'_'+t.tj+'.json')).json(); }
-    catch(e){ continue; }
+  const gGot = await Promise.all(need.map(function(t){
+    return fetch('tiles_1000m/ground/tile_g_'+t.ti+'_'+t.tj+'.json').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+  }));
+  for (let gi=0; gi<gGot.length; gi++){
+    const gj = gGot[gi];
+    if (!gj) continue;
     for (const f of gj.features){
       const st = STYLE[f.properties.k]; if(!st) continue;
       features++;
@@ -1493,18 +1495,18 @@ function updateIntroInfo(){
   buildMarkers();
   ensureBaseGround(); /* C14: 상세 바닥을 기다리지 않고 첫 프레임부터 건축물을 지면에 안착 */
   const tt=performance.now();
-  await loadTiles(VIEW.initialKm, VIEW.initialLod, true);
+  await loadTiles(VIEW.initialKm, VIEW.initialLod, false);
   PERF.tilesMs=performance.now()-tt;
-  await addHierarchyLabels();
   applyEnv(envByClock());
-  await loadWeather();
-  await addWaterLayer();
   animate();
   switchTab('basic');
   requestAnimationFrame(function(){
     PERF.firstFrameMs=performance.now()-PERF.start;
     updateIntroInfo();
     if(currentTab==='drone') renderDrone();
+    loadGround(VIEW.initialKm, (VIEW.initialKm*1000)/2);
+    addWaterLayer();
+    loadWeather();
     scheduleViewExpand();
   });
 })();
@@ -2038,7 +2040,7 @@ function updateIntroInfo(){
   /* 토스트 알림 */
   #spatial-toast {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 88px);
+    top: calc(env(safe-area-inset-top, 0px) + 148px);
     left: 50%;
     transform: translateX(-50%);
     z-index: 60;
@@ -3223,9 +3225,9 @@ function updateIntroInfo(){
     var sl = document.getElementById('spatial-time-slider');
     var slLbl = document.getElementById('time-slider-label');
     if(sl && slLbl){
-      var hVal = [10, 13, 18, 21.5][curAtmoIdx] || 13;
+      var hVal = [13.5, 13.5, 18.0, 21.5][curAtmoIdx] || 13.5;
       sl.value = hVal;
-      slLbl.textContent = m.label_ko + ' ' + Math.floor(hVal) + ':00';
+      slLbl.textContent = m.label_ko + ' ' + Math.floor(hVal) + (hVal % 1 ? ':30' : ':00');
     }
   }
 
@@ -3383,7 +3385,7 @@ function updateIntroInfo(){
   });
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('../../service-worker.js').catch(function(){});
+      navigator.serviceWorker.register('/service-worker.js').catch(function(){});
     });
   }
   window.triggerSpatialPWA = function(){
