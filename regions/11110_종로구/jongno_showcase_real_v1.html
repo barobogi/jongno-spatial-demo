@@ -1894,19 +1894,17 @@ function updateIntroInfo(){
   }
 
   #spatial-license-bar {
-    background: rgba(11, 17, 30, 0.90);
+    background: rgba(11, 17, 30, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 10px;
-    padding: 3.5px 8px;
-    font-size: 8.5px;
+    border-radius: 9px;
+    padding: 3px 6px;
+    font-size: 8px;
     font-weight: 600;
     color: #cbd5e1;
     text-align: center;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     pointer-events: auto;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.35px;
   }
 
   
@@ -2067,7 +2065,7 @@ function updateIntroInfo(){
       <a class="back-pill" id="app-back-link" href="../../m/index.html" title="목록으로">‹</a>
       <div class="brand-text-wrap">
         <div class="brand-main" id="ui-brand-title">서울 종로구 3D 공간지도</div>
-        <div class="brand-sub" id="ui-brand-sub">실측 3,581동 · 공공누리·ODbL·CC BY 4.0</div>
+        <div class="brand-sub" id="ui-brand-sub">실측 3,581동 · 공공누리1유형·ODbL</div>
       </div>
     </div>
     <div class="top-actions">
@@ -2137,7 +2135,7 @@ function updateIntroInfo(){
     </button>
   </div>
   <div id="spatial-license-bar">
-    📄 출처·라이선스: 도로·성곽 © OpenStreetMap(ODbL) · 고도 © Open-Meteo(CC BY 4.0) · 건축물·행정·문화재(공공누리 제1유형)
+    📄 도로·성곽 © OSM(ODbL) · 고도 © Open-Meteo(CC BY 4.0) · 건축·문화재·행정(공공누리 제1유형)
   </div>
 </div>
 
@@ -3307,7 +3305,7 @@ function updateIntroInfo(){
     document.getElementById('ui-brand-title').textContent =
       (currentLang === 'en') ? 'Jongno 3D Spatial Map' : '서울 종로구 3D 공간지도';
     document.getElementById('ui-brand-sub').textContent =
-      (currentLang === 'en') ? '3,581 3D Bldgs · KOGL·ODbL·CC BY 4.0' : '실측 3,581동 · 공공누리·ODbL·CC BY 4.0';
+      (currentLang === 'en') ? '3,581 Bldgs · KOGL·ODbL·CC-BY' : '실측 3,581동 · 공공누리1유형·ODbL';
 
     var catLabels = {
       all:      { ko: '전체 공간', en: 'All Spaces' },
