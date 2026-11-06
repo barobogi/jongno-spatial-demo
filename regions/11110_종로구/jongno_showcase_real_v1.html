@@ -640,6 +640,7 @@ async function loadTiles(km, forcedLod, includeGround){
   g.setAttribute('normal', new THREE.Float32BufferAttribute(norm,3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
   MESH=new THREE.Mesh(g,createBuildingMaterial(true));
+  try{ var eGeo=new THREE.EdgesGeometry(g, 26); var eLines=new THREE.LineSegments(eGeo, new THREE.LineBasicMaterial({color:0x334155, transparent:true, opacity:0.38})); MESH.add(eLines); }catch(_e){}
   scene.add(MESH);
   if (INST){ scene.remove(INST); INST.geometry.dispose(); INST.material.dispose(); INST=null; }
   if (boxes.length){
@@ -2647,11 +2648,135 @@ function updateIntroInfo(){
   var landmarkArchGroup = new THREE.Group();
   scene.add(landmarkArchGroup);
 
-  function makeHanokRoofGeo(w, d, h, topRatio){
-    var g = new THREE.CylinderGeometry((w * (topRatio || 0.58)) / 1.414, (w * 1.12) / 1.414, h, 4);
-    g.rotateY(Math.PI / 4);
-    g.scale(1, 1, d / w);
-    return g;
+  var WATER_SHADER_UNIS = [];
+  function createReflectiveWaterMaterial(baseColorHex){
+    var mat = new THREE.MeshLambertMaterial({
+      color: baseColorHex || 0x0891b2,
+      transparent: true,
+      opacity: 0.92
+    });
+    var uTime = { value: 0.0 };
+    WATER_SHADER_UNIS.push(uTime);
+    mat.onBeforeCompile = function(shader){
+      shader.uniforms.uWaterTime = uTime;
+      shader.vertexShader = 'varying vec3 vWaterWorld;\n' + shader.vertexShader.replace(
+        '#include <project_vertex>',
+        '#include <project_vertex>\nvWaterWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;'
+      );
+      shader.fragmentShader = 'uniform float uWaterTime;\nvarying vec3 vWaterWorld;\n' + shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        [
+          'float w1 = sin(vWaterWorld.x * 0.22 - uWaterTime * 3.4 + cos(vWaterWorld.z * 0.18 + uWaterTime * 2.1));',
+          'float w2 = cos(vWaterWorld.z * 0.35 - uWaterTime * 2.8 + sin(vWaterWorld.x * 0.28 - uWaterTime * 1.9));',
+          'float wave = (w1 + w2) * 0.5;',
+          'float spec = pow(max(0.0, wave), 4.0);',
+          'vec3 deepCol = vec3(0.02, 0.36, 0.52);',
+          'vec3 shallowCol = vec3(0.06, 0.72, 0.84);',
+          'vec3 skyRefl = vec3(0.88, 0.96, 1.0) * spec * 0.78 + vec3(0.98, 0.82, 0.35) * pow(max(0.0, -wave), 5.0) * 0.45;',
+          'gl_FragColor.rgb = mix(deepCol, shallowCol, wave * 0.5 + 0.5) + skyRefl;',
+          '#include <dithering_fragment>'
+        ].join('\n')
+      );
+    };
+    return mat;
+  }
+
+  function makeAuthenticPaljakRoof(w, d, h, roofHex, ridgeHex){
+    var grp = new THREE.Group();
+    var segX = 16, segZ = 10;
+    var geo = new THREE.BufferGeometry();
+    var ridgeHalfX = w * 0.28;
+    var eaveHalfX = w * 0.58;
+    var eaveHalfZ = d * 0.58;
+
+    function roofPoint(u, v){
+      var t = Math.abs(v);
+      var curHalfX = ridgeHalfX + (eaveHalfX - ridgeHalfX) * Math.pow(t, 0.88);
+      var x = u * curHalfX;
+      var z = v * eaveHalfZ;
+      var sagCurve = Math.pow(1.0 - t, 1.52);
+      var y = h * sagCurve;
+      var cornerDist = Math.abs(u) * t;
+      var cornerLift = h * 0.28 * Math.pow(cornerDist, 2.2);
+      var sideArch = h * 0.06 * Math.pow(Math.abs(u), 2.0) * (1.0 - t * 0.3);
+      return [x, y + cornerLift + sideArch, z];
+    }
+
+    var verts = [], norms = [], indices = [];
+    for(var iz = 0; iz <= segZ; iz++){
+      var v = (iz / segZ) * 2.0 - 1.0;
+      for(var ix = 0; ix <= segX; ix++){
+        var u = (ix / segX) * 2.0 - 1.0;
+        var pt = roofPoint(u, v);
+        verts.push(pt[0], pt[1], pt[2]);
+        norms.push(0, 1, v * 0.35);
+      }
+    }
+    for(var jz = 0; jz < segZ; jz++){
+      for(var jx = 0; jx < segX; jx++){
+        var a = jz * (segX + 1) + jx;
+        var b = a + 1;
+        var c = a + (segX + 1);
+        var dIdx = c + 1;
+        indices.push(a, c, b, b, c, dIdx);
+      }
+    }
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(norms, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+
+    var roofMat = new THREE.MeshLambertMaterial({ color: roofHex || 0x1e293b, side: THREE.DoubleSide });
+    var roofMesh = new THREE.Mesh(geo, roofMat);
+    grp.add(roofMesh);
+
+    var edgeGeo = new THREE.WireframeGeometry(geo);
+    var edgeMat = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.52 });
+    grp.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+    var hapgakMat = new THREE.MeshLambertMaterial({ color: 0xfef3c7, side: THREE.DoubleSide });
+    [-1, 1].forEach(function(side){
+      var pTop = roofPoint(side * 0.52, 0);
+      var pFront = roofPoint(side * 0.85, 0.65);
+      var pBack = roofPoint(side * 0.85, -0.65);
+      var hgGeo = new THREE.BufferGeometry();
+      hgGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+        pTop[0], pTop[1] - 0.2, pTop[2],
+        pFront[0], pFront[1] * 0.35, pFront[2],
+        pBack[0], pBack[1] * 0.35, pBack[2]
+      ], 3));
+      hgGeo.computeVertexNormals();
+      grp.add(new THREE.Mesh(hgGeo, hapgakMat));
+    });
+
+    var rMat = new THREE.MeshBasicMaterial({ color: ridgeHex || 0xe2e8f0 });
+    var goldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    var mainRidge = new THREE.Mesh(new THREE.BoxGeometry(ridgeHalfX * 2.08, 1.35, 1.65), rMat);
+    mainRidge.position.set(0, h + 0.55, 0);
+    grp.add(mainRidge);
+
+    [-ridgeHalfX * 1.02, ridgeHalfX * 1.02].forEach(function(rx){
+      var chwi = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.6, 2.0), goldMat);
+      chwi.position.set(rx, h + 1.2, 0);
+      grp.add(chwi);
+    });
+
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(cr){
+      var sx = cr[0], sz = cr[1];
+      var cPts = [
+        new THREE.Vector3(sx * ridgeHalfX, h + 0.3, 0),
+        new THREE.Vector3(sx * (ridgeHalfX + (eaveHalfX - ridgeHalfX) * 0.52), h * 0.42, sz * eaveHalfZ * 0.52),
+        new THREE.Vector3(sx * eaveHalfX * 1.03, h * 0.30, sz * eaveHalfZ * 1.03)
+      ];
+      var cCurve = new THREE.CatmullRomCurve3(cPts);
+      var cGeo = new THREE.TubeGeometry(cCurve, 12, 0.72, 6, false);
+      grp.add(new THREE.Mesh(cGeo, rMat));
+      var tip = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2.4, 5), goldMat);
+      tip.position.set(sx * eaveHalfX * 1.04, h * 0.34, sz * eaveHalfZ * 1.04);
+      grp.add(tip);
+    });
+
+    return grp;
   }
 
   function addPalaceHall(parent, lon, lat, opts){
@@ -2662,62 +2787,102 @@ function updateIntroInfo(){
 
     var w = opts.w || 36, d = opts.d || 24, baseH = opts.baseH || 5, colH = opts.colH || 10, roofH = opts.roofH || 9;
     var stoneMat = new THREE.MeshLambertMaterial({ color: opts.stoneColor || 0xf1f5f9 });
-    var redMat = new THREE.MeshLambertMaterial({ color: 0xb91c1c });
-    var dancheongMat = new THREE.MeshLambertMaterial({ color: 0x059669 });
-    var roofMat = new THREE.MeshLambertMaterial({ color: opts.roofColor || 0x1e293b });
+    var stoneEdgeMat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.65 });
+    var redMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 });
+    var coreWallMat = new THREE.MeshLambertMaterial({ color: 0x7f1d1d });
+    var dancheongMat = new THREE.MeshLambertMaterial({ color: 0x10b981 });
     var goldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
 
     if(opts.courtyardW){
-      var cy = new THREE.Mesh(new THREE.BoxGeometry(opts.courtyardW, 1.2, opts.courtyardD || opts.courtyardW), new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
+      var cyGeo = new THREE.BoxGeometry(opts.courtyardW, 1.2, opts.courtyardD || opts.courtyardW);
+      var cy = new THREE.Mesh(cyGeo, new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
       cy.position.set(0, 0.6, opts.courtyardOffsetZ || 28);
       grp.add(cy);
     }
 
-    var b1 = new THREE.Mesh(new THREE.BoxGeometry(w * 1.38, baseH * 0.58, d * 1.38), stoneMat);
-    b1.position.y = baseH * 0.29;
+    var b1Geo = new THREE.BoxGeometry(w * 1.42, baseH * 0.56, d * 1.42);
+    var b1 = new THREE.Mesh(b1Geo, stoneMat);
+    b1.position.y = baseH * 0.28;
+    b1.add(new THREE.LineSegments(new THREE.EdgesGeometry(b1Geo), stoneEdgeMat));
     grp.add(b1);
 
-    var b2 = new THREE.Mesh(new THREE.BoxGeometry(w * 1.16, baseH * 0.45, d * 1.16), stoneMat);
-    b2.position.y = baseH * 0.58 + baseH * 0.225;
+    var b2Geo = new THREE.BoxGeometry(w * 1.18, baseH * 0.44, d * 1.18);
+    var b2 = new THREE.Mesh(b2Geo, stoneMat);
+    b2.position.y = baseH * 0.56 + baseH * 0.22;
+    b2.add(new THREE.LineSegments(new THREE.EdgesGeometry(b2Geo), stoneEdgeMat));
     grp.add(b2);
 
-    var stair = new THREE.Mesh(new THREE.BoxGeometry(w * 0.28, baseH, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-    stair.position.set(0, baseH * 0.5, d * 0.68);
+    var railPostGeo = new THREE.BoxGeometry(1.1, 2.2, 1.1);
+    for(var rpx = -w * 0.56; rpx <= w * 0.56; rpx += w * 0.14){
+      [-d * 0.56, d * 0.56].forEach(function(rpz){
+        if(rpz > 0 && Math.abs(rpx) < w * 0.16) return;
+        var post = new THREE.Mesh(railPostGeo, stoneMat);
+        post.position.set(rpx, baseH + 1.1, rpz);
+        grp.add(post);
+      });
+    }
+
+    var stairGeo = new THREE.BoxGeometry(w * 0.26, baseH, 9.5);
+    var stair = new THREE.Mesh(stairGeo, new THREE.MeshLambertMaterial({ color: 0xffffff }));
+    stair.position.set(0, baseH * 0.5, d * 0.70);
+    stair.add(new THREE.LineSegments(new THREE.EdgesGeometry(stairGeo), stoneEdgeMat));
     grp.add(stair);
 
     var y0 = baseH;
-    var body = new THREE.Mesh(new THREE.BoxGeometry(w * 0.92, colH, d * 0.88), redMat);
-    body.position.y = y0 + colH * 0.5;
-    grp.add(body);
 
-    var frieze = new THREE.Mesh(new THREE.BoxGeometry(w * 0.96, 2.2, d * 0.92), dancheongMat);
-    frieze.position.y = y0 + colH - 0.8;
+    var coreBody = new THREE.Mesh(new THREE.BoxGeometry(w * 0.80, colH, d * 0.74), coreWallMat);
+    coreBody.position.y = y0 + colH * 0.5;
+    grp.add(coreBody);
+
+    var colGeo = new THREE.CylinderGeometry(0.85, 0.95, colH, 10);
+    var nColsX = 6, nColsZ = 4;
+    for(var cxIdx = 0; cxIdx <= nColsX; cxIdx++){
+      var cxPos = (-0.45 + (cxIdx / nColsX) * 0.90) * w;
+      [-0.41 * d, 0.41 * d].forEach(function(czPos){
+        var colM = new THREE.Mesh(colGeo, redMat);
+        colM.position.set(cxPos, y0 + colH * 0.5, czPos);
+        grp.add(colM);
+      });
+    }
+    for(var czIdx = 1; czIdx < nColsZ; czIdx++){
+      var czP = (-0.41 + (czIdx / nColsZ) * 0.82) * d;
+      [-0.45 * w, 0.45 * w].forEach(function(cxP){
+        var colM2 = new THREE.Mesh(colGeo, redMat);
+        colM2.position.set(cxP, y0 + colH * 0.5, czP);
+        grp.add(colM2);
+      });
+    }
+
+    var frieze = new THREE.Mesh(new THREE.BoxGeometry(w * 0.96, 2.4, d * 0.90), dancheongMat);
+    frieze.position.y = y0 + colH - 0.9;
     grp.add(frieze);
 
-    var r1 = new THREE.Mesh(makeHanokRoofGeo(w * 1.18, d * 1.18, roofH * 0.62, 0.68), roofMat);
-    r1.position.y = y0 + colH + roofH * 0.31;
+    var signBoard = new THREE.Mesh(new THREE.BoxGeometry(w * 0.22, 2.8, 1.2), goldMat);
+    signBoard.position.set(0, y0 + colH - 0.4, d * 0.46);
+    grp.add(signBoard);
+
+    var r1 = makeAuthenticPaljakRoof(w * 1.16, d * 1.16, roofH * 0.68, opts.roofColor || 0x1e293b, opts.blueRidge ? 0x38bdf8 : 0xe2e8f0);
+    r1.position.y = y0 + colH - 0.5;
     grp.add(r1);
 
     if(opts.doubleRoof){
-      var body2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.74, colH * 0.65, d * 0.70), redMat);
-      body2.position.y = y0 + colH + roofH * 0.52 + colH * 0.32;
+      var y2 = y0 + colH + roofH * 0.46;
+      var colH2 = colH * 0.68;
+      var body2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.72, colH2, d * 0.66), redMat);
+      body2.position.y = y2 + colH2 * 0.5;
       grp.add(body2);
 
-      var frieze2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.78, 1.8, d * 0.74), dancheongMat);
-      frieze2.position.y = y0 + colH + roofH * 0.52 + colH * 0.62;
+      var frieze2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.78, 2.0, d * 0.72), dancheongMat);
+      frieze2.position.y = y2 + colH2 - 0.7;
       grp.add(frieze2);
 
-      var r2 = new THREE.Mesh(makeHanokRoofGeo(w * 0.98, d * 0.98, roofH * 0.78, 0.52), roofMat);
-      r2.position.y = y0 + colH + roofH * 0.52 + colH * 0.65 + roofH * 0.39;
-      grp.add(r2);
+      var signBoard2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.20, 2.6, 1.2), goldMat);
+      signBoard2.position.set(0, y2 + colH2 - 0.3, d * 0.38);
+      grp.add(signBoard2);
 
-      var ridge = new THREE.Mesh(new THREE.BoxGeometry(w * 0.48, 1.6, 2.2), opts.blueRidge ? new THREE.MeshBasicMaterial({ color: 0x38bdf8 }) : goldMat);
-      ridge.position.y = y0 + colH + roofH * 0.52 + colH * 0.65 + roofH * 0.78 + 0.6;
-      grp.add(ridge);
-    } else {
-      var ridge1 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.54, 1.4, 2.0), goldMat);
-      ridge1.position.y = y0 + colH + roofH * 0.62 + 0.5;
-      grp.add(ridge1);
+      var r2 = makeAuthenticPaljakRoof(w * 0.98, d * 0.98, roofH * 0.88, opts.roofColor || 0x1e293b, opts.blueRidge ? 0x38bdf8 : 0xfbbf24);
+      r2.position.y = y2 + colH2 - 0.4;
+      grp.add(r2);
     }
 
     parent.add(grp);
@@ -2730,36 +2895,48 @@ function updateIntroInfo(){
     grp.position.set(xz[0], 0, xz[1]);
     var w = opts.w || 58, d = opts.d || 20, stoneH = opts.stoneH || 13;
 
-    var base = new THREE.Mesh(new THREE.BoxGeometry(w, stoneH, d), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+    var baseGeo = new THREE.BoxGeometry(w, stoneH, d);
+    var base = new THREE.Mesh(baseGeo, new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
     base.position.y = stoneH * 0.5;
+    base.add(new THREE.LineSegments(new THREE.EdgesGeometry(baseGeo), new THREE.LineBasicMaterial({ color: 0x475569 })));
     grp.add(base);
+
+    var parapetGeo = new THREE.BoxGeometry(w * 1.02, 1.8, d * 1.02);
+    var parapet = new THREE.Mesh(parapetGeo, new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
+    parapet.position.y = stoneH + 0.9;
+    grp.add(parapet);
 
     [-w * 0.24, 0, w * 0.24].forEach(function(ax, idx){
       var archW = (idx === 1) ? w * 0.16 : w * 0.12;
-      var arch = new THREE.Mesh(new THREE.BoxGeometry(archW, stoneH * 0.68, d + 1.2), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
-      arch.position.set(ax, stoneH * 0.34, 0);
+      var archH = stoneH * 0.68;
+      var arch = new THREE.Mesh(new THREE.BoxGeometry(archW, archH * 0.65, d + 1.4), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
+      arch.position.set(ax, archH * 0.325, 0);
       grp.add(arch);
+      var archTop = new THREE.Mesh(new THREE.CylinderGeometry(archW * 0.5, archW * 0.5, d + 1.4, 12), new THREE.MeshBasicMaterial({ color: 0x0f172a }));
+      archTop.rotation.x = Math.PI / 2;
+      archTop.position.set(ax, archH * 0.65, 0);
+      grp.add(archTop);
     });
 
-    var hall = new THREE.Mesh(new THREE.BoxGeometry(w * 0.78, 8.5, d * 0.76), new THREE.MeshLambertMaterial({ color: 0xb91c1c }));
-    hall.position.y = stoneH + 4.25;
+    var hall = new THREE.Mesh(new THREE.BoxGeometry(w * 0.76, 8.0, d * 0.74), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+    hall.position.y = stoneH + 1.5 + 4.0;
     grp.add(hall);
 
-    var r1 = new THREE.Mesh(makeHanokRoofGeo(w * 0.96, d * 0.98, 5.5, 0.70), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    r1.position.y = stoneH + 8.5 + 2.75;
+    var r1 = makeAuthenticPaljakRoof(w * 0.94, d * 0.96, 6.2, 0x1e293b, 0xe2e8f0);
+    r1.position.y = stoneH + 9.0;
     grp.add(r1);
 
-    var hall2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.62, 5.5, d * 0.62), new THREE.MeshLambertMaterial({ color: 0xb91c1c }));
-    hall2.position.y = stoneH + 13.0 + 2.75;
+    var hall2 = new THREE.Mesh(new THREE.BoxGeometry(w * 0.60, 5.8, d * 0.60), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+    hall2.position.y = stoneH + 13.5 + 2.9;
     grp.add(hall2);
 
-    var r2 = new THREE.Mesh(makeHanokRoofGeo(w * 0.82, d * 0.84, 6.8, 0.52), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    r2.position.y = stoneH + 18.5 + 3.4;
-    grp.add(r2);
+    var sign = new THREE.Mesh(new THREE.BoxGeometry(w * 0.18, 2.5, 1.2), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
+    sign.position.set(0, stoneH + 17.5, d * 0.32);
+    grp.add(sign);
 
-    var ridge = new THREE.Mesh(new THREE.BoxGeometry(w * 0.42, 1.5, 2.0), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
-    ridge.position.y = stoneH + 25.6;
-    grp.add(ridge);
+    var r2 = makeAuthenticPaljakRoof(w * 0.80, d * 0.84, 7.6, 0x1e293b, 0xfbbf24);
+    r2.position.y = stoneH + 19.0;
+    grp.add(r2);
 
     parent.add(grp);
   }
@@ -2839,26 +3016,26 @@ function updateIntroInfo(){
     var pondBorder = new THREE.Mesh(new THREE.BoxGeometry(118, 2.2, 104), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
     pondBorder.position.y = 1.1;
     ghGrp.add(pondBorder);
-    var pondWater = new THREE.Mesh(new THREE.BoxGeometry(110, 2.6, 96), new THREE.MeshBasicMaterial({ color: 0x0891b2 }));
-    pondWater.position.y = 1.4;
+    var pondWater = new THREE.Mesh(new THREE.BoxGeometry(110, 2.8, 96), createReflectiveWaterMaterial(0x0891b2));
+    pondWater.position.y = 1.5;
     ghGrp.add(pondWater);
 
     for(var px = -14; px <= 14; px += 7){
       for(var pz = -10; pz <= 10; pz += 6.6){
-        var pil = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 9.5, 8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
-        pil.position.set(px, 5.5, pz);
+        var pil = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.25, 10.5, 8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        pil.position.set(px, 5.8, pz);
         ghGrp.add(pil);
       }
     }
-    var ghFloor = new THREE.Mesh(new THREE.BoxGeometry(38, 6.5, 28), new THREE.MeshLambertMaterial({ color: 0xb91c1c }));
-    ghFloor.position.set(0, 13.0, 0);
+    var ghFloor = new THREE.Mesh(new THREE.BoxGeometry(38, 6.8, 28), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+    ghFloor.position.set(0, 13.8, 0);
     ghGrp.add(ghFloor);
-    var ghRoof = new THREE.Mesh(makeHanokRoofGeo(46, 36, 9.5, 0.56), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    ghRoof.position.set(0, 20.5, 0);
+    var ghRoof = makeAuthenticPaljakRoof(46, 36, 10.5, 0x1e293b, 0xfbbf24);
+    ghRoof.position.set(0, 17.0, 0);
     ghGrp.add(ghRoof);
     [-10, 0, 10].forEach(function(bz){
-      var br = new THREE.Mesh(new THREE.BoxGeometry(24, 2.5, 4.2), new THREE.MeshLambertMaterial({ color: 0xf1f5f9 }));
-      br.position.set(30, 2.8, bz);
+      var br = new THREE.Mesh(new THREE.BoxGeometry(24, 2.8, 4.5), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+      br.position.set(30, 3.0, bz);
       ghGrp.add(br);
     });
     landmarkArchGroup.add(ghGrp);
@@ -2866,20 +3043,20 @@ function updateIntroInfo(){
     var hwXZ = toXZ(126.9770, 37.5817);
     var hwGrp = new THREE.Group();
     hwGrp.position.set(hwXZ[0], 0, hwXZ[1]);
-    var hwPond = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 2.2, 28), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
-    hwPond.position.y = 1.1;
+    var hwPond = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 2.4, 28), createReflectiveWaterMaterial(0x06b6d4));
+    hwPond.position.y = 1.2;
     hwGrp.add(hwPond);
     var hwIsl = new THREE.Mesh(new THREE.CylinderGeometry(12, 14, 3.8, 16), new THREE.MeshLambertMaterial({ color: 0x15803d }));
     hwIsl.position.y = 2.0;
     hwGrp.add(hwIsl);
-    var hwPav = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 9.0, 6), new THREE.MeshLambertMaterial({ color: 0xb91c1c }));
+    var hwPav = new THREE.Mesh(new THREE.CylinderGeometry(7.5, 7.5, 9.0, 6), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
     hwPav.position.y = 8.0;
     hwGrp.add(hwPav);
-    var hwRoof = new THREE.Mesh(new THREE.ConeGeometry(11.5, 7.5, 6), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    hwRoof.position.y = 16.0;
+    var hwRoof = new THREE.Mesh(new THREE.ConeGeometry(12.0, 8.0, 6), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    hwRoof.position.y = 16.5;
     hwGrp.add(hwRoof);
-    var hwBridge = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.4, 26), new THREE.MeshLambertMaterial({ color: 0xfef3c7 }));
-    hwBridge.position.set(0, 3.2, -20);
+    var hwBridge = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.6, 26), new THREE.MeshLambertMaterial({ color: 0xfef3c7 }));
+    hwBridge.position.set(0, 3.3, -20);
     hwGrp.add(hwBridge);
     landmarkArchGroup.add(hwGrp);
 
@@ -2900,8 +3077,8 @@ function updateIntroInfo(){
     var ysXZ = toXZ(126.9769, 37.5710);
     var ysGrp = new THREE.Group();
     ysGrp.position.set(ysXZ[0], 0, ysXZ[1]);
-    var ysPool = new THREE.Mesh(new THREE.BoxGeometry(26, 1.8, 42), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
-    ysPool.position.y = 0.9;
+    var ysPool = new THREE.Mesh(new THREE.BoxGeometry(26, 2.0, 42), createReflectiveWaterMaterial(0x38bdf8));
+    ysPool.position.y = 1.0;
     ysGrp.add(ysPool);
     var ysPed = new THREE.Mesh(new THREE.BoxGeometry(9, 16, 9), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
     ysPed.position.y = 8.0;
@@ -2919,8 +3096,8 @@ function updateIntroInfo(){
     var byXZ = toXZ(126.9922, 37.5818);
     var byGrp = new THREE.Group();
     byGrp.position.set(byXZ[0], 0, byXZ[1]);
-    var byPond = new THREE.Mesh(new THREE.BoxGeometry(56, 2.2, 46), new THREE.MeshBasicMaterial({ color: 0x0891b2 }));
-    byPond.position.y = 1.1;
+    var byPond = new THREE.Mesh(new THREE.BoxGeometry(56, 2.4, 46), createReflectiveWaterMaterial(0x0891b2));
+    byPond.position.y = 1.2;
     byGrp.add(byPond);
     var byIsl = new THREE.Mesh(new THREE.CylinderGeometry(9, 10, 3.5, 16), new THREE.MeshLambertMaterial({ color: 0x15803d }));
     byIsl.position.y = 2.0;
@@ -3073,16 +3250,36 @@ function updateIntroInfo(){
     ];
     var cgPts = cgCoords.map(function(c){
       var xz = toXZ(c[0], c[1]);
-      return new THREE.Vector3(xz[0], 3.2, xz[1]);
+      return new THREE.Vector3(xz[0], 3.0, xz[1]);
     });
     var cgCurve = new THREE.CatmullRomCurve3(cgPts);
-    var cgGeo = new THREE.TubeGeometry(cgCurve, 64, 14, 6, false);
-    cgGeo.scale(1, 0.12, 1);
-    var cgMat = new THREE.MeshBasicMaterial({
-      color: 0x06b6d4, transparent: true, opacity: 0.78, depthWrite: false
-    });
-    cheonggyeRibbon = new THREE.Mesh(cgGeo, cgMat);
+    var cgGeo = new THREE.TubeGeometry(cgCurve, 96, 18, 8, false);
+    cgGeo.scale(1, 0.14, 1);
+    cheonggyeRibbon = new THREE.Mesh(cgGeo, createReflectiveWaterMaterial(0x06b6d4));
     scene.add(cheonggyeRibbon);
+
+    [-21, 21].forEach(function(offsetZ){
+      var bankPts = cgCoords.map(function(c){
+        var xz = toXZ(c[0], c[1]);
+        return new THREE.Vector3(xz[0], 4.5, xz[1] + offsetZ);
+      });
+      var bankCurve = new THREE.CatmullRomCurve3(bankPts);
+      var bankGeo = new THREE.TubeGeometry(bankCurve, 64, 3.5, 4, false);
+      var bankMesh = new THREE.Mesh(bankGeo, new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+      scene.add(bankMesh);
+    });
+
+    var cgPlaza = toXZ(126.9774, 37.5691);
+    var springTower = new THREE.Mesh(new THREE.ConeGeometry(6.5, 22, 12), new THREE.MeshLambertMaterial({ color: 0xec4899 }));
+    springTower.position.set(cgPlaza[0] - 16, 11, cgPlaza[1]);
+    scene.add(springTower);
+
+    [[126.9802, 37.5692], [126.9852, 37.5694], [126.9905, 37.5695]].forEach(function(bc){
+      var bxz = toXZ(bc[0], bc[1]);
+      var brMesh = new THREE.Mesh(new THREE.BoxGeometry(14, 3.5, 48), new THREE.MeshLambertMaterial({ color: 0xf1f5f9 }));
+      brMesh.position.set(bxz[0], 5.5, bxz[1]);
+      scene.add(brMesh);
+    });
 
     var zones = [
       { c: [126.9800, 37.5693], spreadX: 600, spreadZ: 80 },
@@ -3189,8 +3386,9 @@ function updateIntroInfo(){
       }
     });
 
+    WATER_SHADER_UNIS.forEach(function(u){ u.value = now * 0.001; });
     if(cheonggyeRibbon){
-      cheonggyeRibbon.material.opacity = 0.65 + 0.2 * Math.sin(now * 0.003);
+      cheonggyeRibbon.position.y = 0.35 * Math.sin(now * 0.003);
     }
     LANTERN_ITEMS.forEach(function(lt){
       lt.y += lt.speedY;
@@ -3791,9 +3989,9 @@ function updateIntroInfo(){
   setTimeout(function(){
     dismissIntroImmediately();
     applySpatialAtmosphereMode(0);
-    var centerXZ = toXZ(126.9820, 37.5740);
-    targetLookAt = new THREE.Vector3(centerXZ[0], 30, centerXZ[1]);
-    targetCamPos = new THREE.Vector3(centerXZ[0] - 120, 1180, centerXZ[1] + 1620);
+    var centerXZ = toXZ(126.9790, 37.5758);
+    targetLookAt = new THREE.Vector3(centerXZ[0], 25, centerXZ[1]);
+    targetCamPos = new THREE.Vector3(centerXZ[0] + 90, 920, centerXZ[1] + 1280);
   }, 450);
 })();
 </script>
