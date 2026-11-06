@@ -3704,6 +3704,9 @@ function updateIntroInfo(){
     if(typeof dl !== 'undefined' && dl){
       dl.position.set(-900 * Math.cos(rad), 2600 * Math.sin(rad), 1400 * Math.cos(rad));
     }
+    if(typeof lanternGroup !== 'undefined' && lanternGroup){
+      lanternGroup.visible = (m.key === 'night');
+    }
     var btn = document.getElementById('btn-season-env');
     if(btn) btn.textContent = (currentLang === 'en') ? m.label_en : m.label_ko;
     var sl = document.getElementById('spatial-time-slider');
@@ -3742,6 +3745,9 @@ function updateIntroInfo(){
     }
 
     if(typeof applyEnv === 'function') applyEnv(envKey);
+    if(typeof lanternGroup !== 'undefined' && lanternGroup){
+      lanternGroup.visible = (envKey === 'night');
+    }
     var rad = altDeg * Math.PI / 180;
     var azim = ((hr - 6) / 17) * Math.PI - Math.PI / 2;
     if(typeof dl !== 'undefined' && dl){
@@ -3980,7 +3986,7 @@ function updateIntroInfo(){
 
   var LEGO_BLOCKS = [
     { key: 'gj', label: '🏯 근정전 블록', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
-    { key: 'cgc', label: '🌊 청계천 수로 블록', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 150, camUp: 70 }
+    { key: 'cgc', label: '🌊 청계천 수로 블록', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 2, camBack: 80, camUp: 45 }
   ];
   var legoLoaded = {};
   window.legoView = function(key, ly, up, back){
@@ -4045,18 +4051,32 @@ function updateIntroInfo(){
       ]).then(function(arr){
         var man = arr[0], gl = arr[1];
         new THREE.TextureLoader().load(base + 'texture_atlas.webp', function(tex){
-          tex.flipY = false;
+          tex.flipY = true; // [제미나이 버그픽스] 2x2 아틀라스 V축 반전 보정 (지붕 기와색, 월대 화강암색 정상화)
           tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
           if(THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
           var model = legoBuild(gl, tex);
           var holder = new THREE.Group();
           holder.add(model);
-          var xz = toXZ(man.coordinates[0], man.coordinates[1]);
-          holder.position.set(xz[0], getGroundY(xz[0], xz[1]) + (def.key === 'cgc' ? 0.2 : 0), xz[1]);
-          holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
+          
+          if(def.key === 'gj'){
+            // [제미나이 버그픽스] 근정전 공중부양 해결: Y=0 지면 정밀 스냅 및 정남향 축선 고정
+            var xz = toXZ(126.9769, 37.5786);
+            holder.position.set(xz[0], 0, xz[1]);
+            holder.rotation.y = Math.PI; // 정남향 정렬
+            if(window.__procGJ) window.__procGJ.visible = false;
+          } else if(def.key === 'cgc'){
+            // [제미나이 버그픽스] 청계천 수로 지면 스냅 및 원점 정합
+            var xz = toXZ(man.coordinates[0], man.coordinates[1]);
+            holder.position.set(xz[0], -0.2, xz[1]);
+            holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
+          } else {
+            var xz = toXZ(man.coordinates[0], man.coordinates[1]);
+            holder.position.set(xz[0], 0, xz[1]);
+            holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
+          }
+          
           holder.userData.man = man;
           scene.add(holder);
-          if(def.key === 'gj' && window.__procGJ) window.__procGJ.visible = false;
           legoLoaded[def.key] = holder;
           resolve(holder);
         }, undefined, reject);
