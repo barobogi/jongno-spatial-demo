@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="../../manifest.json">
 <meta name="theme-color" content="#0b111e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,7 +15,7 @@
   html, body { margin:0; height:100%; overflow:hidden; background:#0b111e; color:#e2e8f0; font-family:'Malgun Gothic', -apple-system, sans-serif; }
   canvas { display:block; width:100vw; height:100vh; }
 
-  /* 상단 헤더 & 브랜딩 바 */
+  
   #header-bar {
     position:absolute; top:0; left:0; right:0; height:58px;
     background:linear-gradient(180deg, rgba(11,17,30,0.96) 0%, rgba(11,17,30,0.8) 80%, rgba(11,17,30,0) 100%);
@@ -25,7 +25,7 @@
   .brand-title { font-size:16px; font-weight:bold; color:#7fd1ff; letter-spacing:0.5px; pointer-events:auto; display:flex; align-items:center; gap:8px; }
   .brand-badge { background:#1e293b; color:#38bdf8; font-size:11px; padding:3px 9px; border-radius:12px; border:1px solid #0284c7; font-weight:600; }
 
-  /* 상단 5대 권역 탭 바 (Floating Tab Bar) */
+  
   #top-tab-bar {
     position:absolute; top:68px; left:50%; transform:translateX(-50%); z-index:25;
     background:rgba(15,23,42,0.92); backdrop-filter:blur(12px);
@@ -43,7 +43,7 @@
     color:#ffffff; box-shadow:0 4px 12px rgba(2,132,199,0.4);
   }
 
-  /* 좌측 사이드바: 탭별 목록 및 정보 */
+  
   #sidebar {
     position:absolute; top:130px; left:20px; bottom:20px; width:340px;
     background:rgba(15,23,42,0.90); backdrop-filter:blur(16px);
@@ -69,7 +69,7 @@
   .poi-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
   .poi-desc { font-size:11.5px; color:#94a3b8; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
-  /* 우측 하단 컨트롤러 바 */
+  
   #controls {
     position:absolute; bottom:20px; right:20px; z-index:20;
     display:flex; flex-direction:column; gap:8px;
@@ -82,7 +82,7 @@
   }
   .ctrl-btn:hover { background:#0284c7; color:#fff; border-color:#38bdf8; transform:scale(1.03); }
 
-  /* POI 상세 모달 카드 */
+  
   #poi-modal {
     position:absolute; bottom:24px; left:380px; width:400px;
     background:rgba(15,23,42,0.95); backdrop-filter:blur(20px);
@@ -99,7 +99,7 @@
   .modal-source { font-size:11px; color:#64748b; display:flex; justify-content:space-between; align-items:center; }
   .modal-source a { color:#38bdf8; text-decoration:none; }
 
-  /* 전국 Fog of War 인트로 오버레이 (ITEM-12 구현) */
+  
   #intro-overlay {
     position:absolute; top:0; left:0; right:0; bottom:0; z-index:100;
     background:radial-gradient(circle at center, rgba(11,17,30,0.85) 0%, rgba(5,8,15,0.98) 100%);
@@ -141,7 +141,7 @@
   .poi-item.selected{background:rgba(2,132,199,0.35)!important;border-color:#38bdf8!important;}
   .empty-note{padding:16px 12px;font-size:12.5px;color:#94a3b8;line-height:1.6;text-align:center;}
 
-  /* ===== v3: 6탭 패널 · 로드맵 · 모바일 접기 ===== */
+  
   #top-tab-bar { max-width:calc(100vw - 40px); overflow-x:auto; scrollbar-width:none; }
   #top-tab-bar::-webkit-scrollbar { display:none; }
   .main-tab-btn { white-space:nowrap; flex:0 0 auto; }
@@ -230,7 +230,7 @@
 </style>
 <script src="../../vendor/three.min.js"></script>
 <script>
-/* [만복 2026-11-03 지형 시범] 고도 격자(Open-Meteo 90m DEM, 49x49, ±5km)를 셰이더 공통 변환으로 적용: 모든 재질의 정점 y를 지형 높이만큼 올린다. */
+
 (function(){
   var GL="\nconst int TN=49; const float TR=5000.0; const float TEXAG=1.00;\nconst float TH[2401]=float[2401](30.0,39.0,49.0,93.0,47.0,52.0,92.0,171.0,281.0,320.0,253.0,216.0,249.0,195.0,221.0,280.0,241.0,216.0,274.0,276.0,314.0,393.0,325.0,276.0,303.0,416.0,370.0,295.0,282.0,268.0,219.0,156.0,119.0,111.0,104.0,137.0,146.0,119.0,95.0,82.0,74.0,57.0,48.0,43.0,39.0,38.0,38.0,71.0,55.0,35.0,38.0,47.0,82.0,37.0,50.0,117.0,172.0,289.0,265.0,230.0,187.0,250.0,176.0,168.0,209.0,210.0,213.0,300.0,249.0,296.0,348.0,269.0,232.0,262.0,376.0,370.0,274.0,235.0,213.0,226.0,183.0,121.0,103.0,90.0,99.0,128.0,124.0,111.0,106.0,85.0,77.0,51.0,47.0,39.0,38.0,36.0,48.0,42.0,31.0,39.0,47.0,44.0,34.0,71.0,144.0,195.0,196.0,195.0,163.0,160.0,221.0,182.0,139.0,171.0,157.0,206.0,257.0,197.0,242.0,239.0,214.0,200.0,210.0,289.0,333.0,273.0,202.0,171.0,174.0,187.0,135.0,117.0,105.0,97.0,106.0,96.0,142.0,157.0,117.0,85.0,64.0,46.0,39.0,37.0,32.0,42.0,60.0,34.0,37.0,34.0,36.0,31.0,44.0,67.0,66.0,98.0,133.0,116.0,135.0,182.0,175.0,142.0,135.0,167.0,232.0,184.0,149.0,197.0,178.0,158.0,169.0,186.0,196.0,239.0,274.0,193.0,145.0,126.0,145.0,132.0,118.0,101.0,81.0,67.0,71.0,94.0,138.0,87.0,79.0,77.0,58.0,42.0,38.0,36.0,34.0,37.0,32.0,36.0,30.0,31.0,33.0,55.0,67.0,45.0,54.0,86.0,86.0,114.0,198.0,167.0,118.0,113.0,198.0,211.0,145.0,151.0,192.0,161.0,132.0,133.0,159.0,220.0,252.0,264.0,198.0,154.0,104.0,107.0,115.0,98.0,79.0,73.0,63.0,70.0,102.0,109.0,88.0,65.0,65.0,62.0,41.0,38.0,33.0,32.0,42.0,32.0,27.0,27.0,29.0,33.0,37.0,58.0,84.0,98.0,89.0,132.0,141.0,201.0,148.0,109.0,113.0,146.0,186.0,133.0,134.0,149.0,143.0,113.0,122.0,147.0,192.0,216.0,271.0,212.0,175.0,123.0,91.0,89.0,86.0,75.0,61.0,59.0,64.0,83.0,80.0,96.0,52.0,56.0,67.0,54.0,41.0,33.0,32.0,33.0,27.0,26.0,27.0,30.0,33.0,38.0,62.0,110.0,136.0,134.0,169.0,180.0,164.0,159.0,139.0,100.0,101.0,140.0,113.0,113.0,111.0,102.0,127.0,148.0,178.0,196.0,241.0,286.0,231.0,179.0,141.0,107.0,84.0,72.0,74.0,63.0,53.0,55.0,66.0,55.0,75.0,55.0,47.0,70.0,50.0,37.0,31.0,34.0,31.0,22.0,24.0,29.0,42.0,56.0,40.0,67.0,92.0,174.0,211.0,176.0,129.0,116.0,172.0,167.0,124.0,91.0,115.0,91.0,103.0,118.0,153.0,176.0,200.0,202.0,236.0,286.0,310.0,258.0,196.0,149.0,133.0,101.0,108.0,110.0,125.0,88.0,52.0,50.0,51.0,69.0,64.0,43.0,45.0,37.0,40.0,32.0,32.0,30.0,23.0,24.0,27.0,30.0,57.0,56.0,63.0,113.0,169.0,178.0,134.0,85.0,99.0,154.0,140.0,130.0,100.0,85.0,123.0,119.0,165.0,166.0,218.0,231.0,223.0,267.0,326.0,311.0,266.0,205.0,186.0,171.0,130.0,149.0,137.0,106.0,96.0,61.0,45.0,48.0,50.0,49.0,46.0,38.0,49.0,42.0,33.0,34.0,33.0,23.0,26.0,27.0,29.0,32.0,35.0,58.0,108.0,148.0,127.0,98.0,65.0,75.0,138.0,108.0,103.0,95.0,85.0,123.0,154.0,156.0,219.0,214.0,263.0,280.0,282.0,272.0,285.0,221.0,161.0,163.0,166.0,169.0,171.0,157.0,125.0,88.0,57.0,65.0,58.0,43.0,41.0,47.0,42.0,88.0,65.0,44.0,34.0,29.0,25.0,27.0,35.0,44.0,37.0,52.0,47.0,69.0,134.0,92.0,72.0,48.0,73.0,148.0,112.0,64.0,87.0,70.0,137.0,148.0,169.0,204.0,249.0,300.0,269.0,246.0,227.0,224.0,210.0,152.0,132.0,132.0,136.0,164.0,170.0,130.0,90.0,89.0,76.0,69.0,69.0,51.0,51.0,58.0,124.0,83.0,54.0,32.0,29.0,35.0,43.0,65.0,74.0,75.0,105.0,89.0,66.0,114.0,116.0,53.0,46.0,53.0,84.0,87.0,108.0,120.0,82.0,116.0,156.0,192.0,190.0,221.0,282.0,253.0,192.0,164.0,154.0,139.0,136.0,106.0,81.0,99.0,99.0,153.0,156.0,132.0,95.0,61.0,47.0,79.0,86.0,68.0,117.0,117.0,73.0,43.0,32.0,27.0,37.0,64.0,123.0,126.0,142.0,114.0,125.0,82.0,70.0,82.0,52.0,43.0,55.0,77.0,67.0,121.0,158.0,110.0,106.0,176.0,163.0,200.0,257.0,229.0,227.0,194.0,159.0,128.0,116.0,114.0,88.0,88.0,75.0,80.0,110.0,141.0,142.0,119.0,74.0,52.0,45.0,53.0,57.0,109.0,126.0,102.0,79.0,35.0,24.0,45.0,74.0,132.0,178.0,145.0,88.0,134.0,123.0,46.0,86.0,45.0,43.0,58.0,111.0,137.0,194.0,162.0,106.0,101.0,131.0,157.0,224.0,300.0,234.0,171.0,163.0,183.0,186.0,134.0,103.0,88.0,69.0,68.0,55.0,74.0,109.0,114.0,110.0,67.0,53.0,38.0,40.0,62.0,100.0,107.0,123.0,109.0,39.0,24.0,51.0,74.0,141.0,201.0,131.0,72.0,105.0,111.0,45.0,44.0,42.0,53.0,72.0,123.0,180.0,221.0,164.0,127.0,116.0,122.0,145.0,206.0,306.0,183.0,149.0,119.0,127.0,168.0,174.0,130.0,103.0,84.0,63.0,66.0,49.0,76.0,97.0,70.0,42.0,39.0,33.0,43.0,69.0,103.0,90.0,88.0,90.0,33.0,28.0,46.0,74.0,178.0,181.0,116.0,60.0,45.0,40.0,45.0,42.0,40.0,59.0,133.0,128.0,169.0,240.0,182.0,145.0,125.0,86.0,80.0,103.0,163.0,144.0,93.0,85.0,83.0,107.0,162.0,128.0,72.0,73.0,49.0,48.0,60.0,46.0,51.0,40.0,37.0,36.0,31.0,32.0,39.0,77.0,57.0,51.0,56.0,43.0,31.0,50.0,85.0,167.0,179.0,122.0,62.0,40.0,71.0,70.0,42.0,44.0,62.0,106.0,167.0,190.0,270.0,223.0,186.0,133.0,86.0,61.0,69.0,103.0,136.0,114.0,58.0,67.0,101.0,118.0,112.0,74.0,52.0,50.0,42.0,54.0,45.0,42.0,42.0,48.0,38.0,34.0,27.0,33.0,58.0,73.0,48.0,46.0,27.0,23.0,44.0,68.0,107.0,182.0,111.0,57.0,37.0,48.0,70.0,51.0,51.0,53.0,66.0,120.0,147.0,228.0,269.0,208.0,115.0,65.0,54.0,60.0,81.0,91.0,97.0,52.0,69.0,94.0,87.0,89.0,62.0,50.0,47.0,39.0,45.0,74.0,57.0,44.0,45.0,46.0,47.0,28.0,31.0,45.0,51.0,42.0,40.0,25.0,20.0,46.0,47.0,70.0,128.0,161.0,80.0,33.0,38.0,63.0,64.0,66.0,48.0,76.0,123.0,189.0,313.0,229.0,170.0,118.0,72.0,52.0,50.0,59.0,65.0,79.0,55.0,75.0,75.0,56.0,91.0,70.0,45.0,43.0,41.0,46.0,65.0,66.0,49.0,58.0,59.0,38.0,28.0,28.0,49.0,34.0,37.0,29.0,31.0,22.0,46.0,35.0,39.0,90.0,98.0,80.0,34.0,48.0,94.0,91.0,110.0,86.0,67.0,125.0,166.0,239.0,153.0,90.0,74.0,54.0,48.0,46.0,43.0,45.0,49.0,47.0,63.0,58.0,61.0,65.0,48.0,50.0,37.0,35.0,36.0,49.0,85.0,79.0,81.0,87.0,65.0,30.0,26.0,51.0,30.0,27.0,31.0,25.0,20.0,57.0,40.0,32.0,73.0,74.0,37.0,32.0,53.0,111.0,150.0,156.0,105.0,69.0,111.0,140.0,240.0,172.0,121.0,68.0,47.0,46.0,43.0,40.0,42.0,43.0,47.0,52.0,46.0,55.0,62.0,65.0,39.0,47.0,34.0,30.0,41.0,95.0,97.0,86.0,73.0,70.0,32.0,25.0,27.0,23.0,25.0,30.0,24.0,19.0,33.0,29.0,29.0,38.0,44.0,34.0,43.0,63.0,127.0,205.0,183.0,151.0,92.0,89.0,126.0,171.0,154.0,120.0,84.0,61.0,46.0,42.0,42.0,39.0,41.0,43.0,46.0,41.0,50.0,40.0,46.0,31.0,44.0,44.0,36.0,36.0,89.0,100.0,77.0,43.0,52.0,48.0,25.0,24.0,22.0,22.0,20.0,24.0,24.0,26.0,25.0,26.0,28.0,29.0,35.0,66.0,72.0,132.0,224.0,271.0,187.0,128.0,100.0,74.0,95.0,105.0,114.0,88.0,61.0,49.0,41.0,38.0,38.0,38.0,40.0,41.0,36.0,38.0,36.0,42.0,34.0,35.0,36.0,32.0,35.0,72.0,69.0,94.0,52.0,40.0,63.0,30.0,25.0,21.0,21.0,19.0,21.0,19.0,23.0,25.0,25.0,45.0,77.0,78.0,58.0,62.0,119.0,199.0,220.0,193.0,136.0,79.0,61.0,58.0,77.0,93.0,73.0,49.0,43.0,42.0,34.0,34.0,35.0,41.0,34.0,35.0,36.0,34.0,38.0,39.0,30.0,34.0,27.0,27.0,58.0,45.0,53.0,29.0,29.0,33.0,22.0,22.0,21.0,19.0,19.0,19.0,19.0,20.0,25.0,65.0,62.0,70.0,42.0,39.0,50.0,109.0,181.0,155.0,158.0,174.0,102.0,78.0,60.0,54.0,79.0,74.0,50.0,57.0,41.0,32.0,32.0,36.0,38.0,37.0,32.0,37.0,29.0,40.0,46.0,26.0,26.0,25.0,27.0,35.0,33.0,31.0,31.0,23.0,22.0,22.0,23.0,20.0,19.0,20.0,19.0,16.0,22.0,54.0,56.0,36.0,39.0,32.0,54.0,64.0,99.0,152.0,114.0,136.0,197.0,131.0,90.0,66.0,45.0,52.0,70.0,65.0,56.0,45.0,35.0,35.0,28.0,34.0,32.0,32.0,32.0,29.0,30.0,28.0,31.0,30.0,28.0,26.0,25.0,23.0,23.0,24.0,24.0,22.0,18.0,16.0,21.0,20.0,21.0,21.0,18.0,44.0,67.0,33.0,25.0,26.0,31.0,74.0,81.0,101.0,128.0,93.0,116.0,164.0,161.0,127.0,93.0,57.0,43.0,54.0,52.0,50.0,38.0,32.0,33.0,25.0,35.0,28.0,33.0,31.0,27.0,28.0,26.0,31.0,31.0,24.0,24.0,30.0,23.0,23.0,24.0,20.0,21.0,34.0,22.0,18.0,18.0,17.0,20.0,28.0,57.0,55.0,41.0,21.0,28.0,49.0,100.0,65.0,81.0,96.0,74.0,79.0,113.0,117.0,151.0,109.0,65.0,55.0,41.0,46.0,50.0,49.0,49.0,41.0,40.0,32.0,31.0,30.0,25.0,29.0,27.0,28.0,27.0,27.0,25.0,25.0,24.0,31.0,30.0,31.0,24.0,31.0,34.0,22.0,23.0,30.0,26.0,27.0,31.0,21.0,24.0,21.0,23.0,28.0,50.0,69.0,48.0,77.0,67.0,58.0,94.0,87.0,76.0,90.0,108.0,94.0,61.0,46.0,40.0,44.0,46.0,36.0,35.0,39.0,29.0,35.0,34.0,29.0,32.0,32.0,30.0,30.0,32.0,30.0,28.0,19.0,30.0,34.0,28.0,27.0,26.0,29.0,23.0,29.0,28.0,29.0,25.0,22.0,20.0,21.0,20.0,22.0,39.0,55.0,45.0,41.0,66.0,58.0,51.0,103.0,98.0,61.0,62.0,67.0,75.0,64.0,44.0,42.0,38.0,44.0,46.0,28.0,43.0,32.0,40.0,40.0,39.0,35.0,33.0,36.0,32.0,33.0,24.0,28.0,28.0,33.0,33.0,26.0,27.0,28.0,35.0,41.0,46.0,44.0,36.0,29.0,27.0,14.0,17.0,19.0,25.0,36.0,37.0,34.0,41.0,48.0,38.0,61.0,75.0,76.0,52.0,49.0,55.0,84.0,44.0,40.0,35.0,35.0,39.0,43.0,33.0,40.0,40.0,38.0,45.0,49.0,41.0,33.0,40.0,38.0,36.0,40.0,30.0,39.0,42.0,35.0,28.0,30.0,35.0,42.0,66.0,75.0,59.0,30.0,33.0,26.0,18.0,15.0,26.0,39.0,47.0,32.0,27.0,31.0,30.0,45.0,43.0,80.0,88.0,61.0,56.0,50.0,74.0,49.0,49.0,45.0,38.0,40.0,38.0,43.0,45.0,34.0,51.0,50.0,60.0,55.0,42.0,43.0,59.0,68.0,52.0,35.0,56.0,50.0,30.0,29.0,39.0,43.0,66.0,60.0,41.0,43.0,31.0,21.0,22.0,17.0,20.0,21.0,27.0,43.0,29.0,24.0,29.0,56.0,40.0,53.0,79.0,73.0,53.0,45.0,42.0,51.0,68.0,52.0,39.0,36.0,33.0,42.0,49.0,53.0,48.0,49.0,62.0,70.0,86.0,50.0,45.0,76.0,85.0,68.0,35.0,47.0,48.0,29.0,33.0,51.0,60.0,79.0,65.0,57.0,48.0,31.0,22.0,19.0,15.0,16.0,17.0,23.0,30.0,21.0,27.0,40.0,38.0,44.0,54.0,69.0,56.0,43.0,38.0,35.0,57.0,80.0,82.0,43.0,28.0,30.0,44.0,53.0,68.0,59.0,64.0,90.0,103.0,113.0,72.0,54.0,93.0,81.0,61.0,51.0,70.0,48.0,37.0,40.0,83.0,79.0,78.0,65.0,52.0,51.0,42.0,31.0,30.0,19.0,23.0,20.0,27.0,22.0,21.0,17.0,29.0,46.0,67.0,50.0,74.0,77.0,48.0,35.0,28.0,56.0,80.0,51.0,35.0,26.0,36.0,50.0,72.0,107.0,102.0,96.0,141.0,145.0,127.0,92.0,65.0,119.0,114.0,70.0,85.0,53.0,37.0,40.0,51.0,93.0,69.0,77.0,53.0,58.0,69.0,77.0,35.0,35.0,30.0,26.0,45.0,68.0,50.0,21.0,35.0,35.0,81.0,65.0,31.0,49.0,70.0,37.0,24.0,28.0,52.0,76.0,44.0,32.0,29.0,28.0,44.0,59.0,87.0,109.0,131.0,203.0,243.0,185.0,136.0,117.0,117.0,95.0,79.0,71.0,45.0,50.0,49.0,79.0,130.0,78.0,70.0,43.0,63.0,89.0,88.0,30.0,26.0,25.0,28.0,77.0,72.0,25.0,20.0,21.0,29.0,38.0,28.0,24.0,44.0,58.0,27.0,21.0,27.0,33.0,67.0,69.0,52.0,33.0,29.0,33.0,45.0,63.0,86.0,109.0,187.0,242.0,236.0,192.0,154.0,122.0,106.0,99.0,99.0,56.0,84.0,79.0,102.0,85.0,57.0,59.0,63.0,42.0,55.0,50.0,17.0,15.0,21.0,21.0,68.0,36.0,17.0,26.0,29.0,20.0,23.0,22.0,23.0,50.0,37.0,23.0,24.0,23.0,45.0,75.0,67.0,45.0,30.0,24.0,48.0,36.0,52.0,63.0,89.0,167.0,184.0,201.0,229.0,213.0,155.0,107.0,102.0,100.0,72.0,107.0,90.0,74.0,46.0,37.0,29.0,41.0,20.0,46.0,39.0,19.0,4.0,20.0,25.0,25.0,19.0,14.0,18.0,23.0,19.0,19.0,17.0,19.0,27.0,38.0,19.0,18.0,30.0,52.0,67.0,69.0,56.0,33.0,22.0,43.0,32.0,41.0,46.0,67.0,139.0,146.0,161.0,216.0,245.0,182.0,129.0,71.0,84.0,86.0,123.0,77.0,56.0,41.0,38.0,32.0,19.0,24.0,56.0,54.0,4.0,12.0,21.0,19.0,16.0,15.0,16.0,19.0,18.0,15.0,16.0,25.0,16.0,13.0,9.0,17.0,19.0,67.0,51.0,47.0,41.0,32.0,25.0,23.0,21.0,24.0,31.0,43.0,68.0,89.0,72.0,104.0,158.0,182.0,146.0,102.0,63.0,108.0,149.0,138.0,68.0,54.0,43.0,67.0,40.0,15.0,14.0,7.0,4.0,19.0,22.0,3.0,3.0,3.0,16.0,21.0,19.0,12.0,13.0,17.0,16.0,13.0,14.0,13.0,12.0,26.0,61.0,44.0,37.0,48.0,42.0,24.0,22.0,19.0,22.0,30.0,63.0,93.0,76.0,55.0,88.0,112.0,138.0,139.0,104.0,55.0,96.0,122.0,100.0,48.0,34.0,25.0,45.0,44.0,9.0,4.0,4.0,18.0,23.0,22.0,3.0,3.0,3.0,3.0,3.0,14.0,11.0,16.0,11.0,19.0,14.0,15.0,16.0,18.0,30.0,55.0,39.0,33.0,50.0,36.0,22.0,22.0,18.0,23.0,41.0,60.0,68.0,61.0,54.0,66.0,74.0,101.0,110.0,82.0,50.0,70.0,74.0,81.0,40.0,26.0,17.0,20.0,4.0,4.0,4.0,11.0,18.0,22.0,24.0,5.0,9.0,11.0,3.0,3.0,3.0,3.0,3.0,12.0,13.0,13.0,17.0,15.0,46.0,51.0,32.0,22.0,26.0,36.0,21.0,18.0,16.0,19.0,26.0,36.0,52.0,46.0,42.0,53.0,50.0,75.0,106.0,99.0,75.0,38.0,43.0,78.0,99.0,63.0,53.0,18.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,12.0,3.0,3.0,3.0,6.0,7.0,3.0,3.0,3.0,5.0,15.0,24.0,30.0,43.0,70.0,60.0,28.0,15.0,18.0,19.0,17.0,20.0,15.0,15.0,29.0,22.0,25.0,25.0,29.0,42.0,87.0,111.0,98.0,61.0,51.0,34.0,35.0,66.0,57.0,60.0,77.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,16.0,47.0,44.0,62.0,38.0,32.0,23.0,17.0,16.0,14.0,20.0,13.0,16.0,13.0,20.0,20.0,23.0,29.0,38.0,63.0,84.0,81.0,79.0,72.0,52.0,25.0,20.0,35.0,36.0,71.0,50.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,4.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,12.0,17.0,19.0,26.0,27.0,17.0,13.0,16.0,21.0,16.0,16.0,17.0,20.0,26.0,27.0,35.0,34.0,54.0,52.0,53.0,51.0,63.0,79.0,55.0,27.0,23.0,21.0,40.0,67.0,4.0,4.0,4.0,4.0,4.0,14.0,23.0,17.0,8.0,4.0,12.0,10.0,8.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,17.0,18.0,18.0,18.0,16.0,15.0,20.0,12.0,12.0,19.0,25.0,43.0,37.0,32.0,42.0,61.0,45.0,36.0,38.0,67.0,79.0,64.0,40.0,19.0,17.0,55.0,28.0,4.0,4.0,4.0,4.0,17.0,19.0,24.0,27.0,26.0,19.0,9.0,13.0,18.0,13.0,10.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,20.0,13.0,10.0,12.0,12.0,19.0,12.0,14.0,25.0,26.0,27.0,21.0,23.0,29.0,51.0,62.0,33.0,33.0,61.0,51.0,47.0,68.0,41.0,11.0,18.0,4.0,4.0,4.0,4.0,11.0,24.0,29.0,28.0,26.0,21.0,20.0,13.0,14.0,21.0,16.0,13.0,7.0,3.0,3.0,3.0,3.0,3.0,3.0,3.0,17.0,13.0,14.0,13.0,12.0,12.0,13.0,16.0,23.0,21.0,20.0,18.0,19.0,26.0,31.0,48.0,25.0,36.0,61.0,38.0,31.0,41.0,40.0,8.0,4.0,4.0,4.0,4.0,8.0,22.0,26.0,24.0,27.0,26.0,25.0,25.0);\nfloat terrainH(vec2 xz){\n  vec2 u=clamp((xz+TR)/(2.0*TR),0.0,1.0)*float(TN-1); ivec2 i=min(ivec2(floor(u)),ivec2(TN-2)); vec2 f=u-vec2(i);\n  float a=TH[i.y*TN+i.x], b=TH[i.y*TN+i.x+1], c=TH[(i.y+1)*TN+i.x], d=TH[(i.y+1)*TN+i.x+1];\n  float h=mix(mix(a,b,f.x),mix(c,d,f.x),f.y);\n  float e=max(abs(xz.x),abs(xz.y)); float w=1.0-smoothstep(3200.0,TR,e);\n  return (h*w+20.0*(1.0-w))*TEXAG;\n}\n";
   THREE.ShaderChunk.common += GL;
@@ -253,7 +253,7 @@
 <body>
 <div id="intro-overlay">
   <div class="intro-card">
-    <div class="intro-badge">3AI DIGITAL TWIN · BLOCK 11110 · v1</div>
+    <div class="intro-badge">KOREA 3D DIGITAL TWIN · BLOCK 11110</div>
     <div class="intro-title">서울특별시 종로구 <span>실제 건물</span></div>
     <div class="intro-desc">손가락으로 밀어서 이동하고, 두 손가락으로 확대·축소할 수 있습니다.<br>화면 아래 패널에서 장소 정보를 보고, 오른쪽 버튼으로 낮·밤 조명을 바꿀 수 있습니다.<br>처음에는 지도 데이터를 받느라 몇 초 걸립니다.</div>
     <div class="intro-grid-status">
@@ -265,7 +265,7 @@
   </div>
 </div>
 <div id="header-bar">
-  <div class="brand-title"><span>3AI KOREA 3D MAP</span><span class="brand-badge">서울특별시 종로구 (11110)</span></div>
+  <div class="brand-title"><span>KOREA 3D SPATIAL MAP</span><span class="brand-badge">서울특별시 종로구 (11110)</span></div>
   <div style="pointer-events:auto; display:flex; gap:10px;">
     <button class="ctrl-btn" onclick="location.href='../../korea_frontier_map_v2.html'">전국 지도로</button>
     <button class="ctrl-btn" onclick="reopenFogMap()" style="padding:6px 14px; font-size:11px;">인트로 다시 보기</button>
@@ -305,11 +305,10 @@
 </div>
 <div id="ext-badge">외부 요청 0 · three.js 로컬 번들 · 데이터 block.json(동일 폴더)</div>
 <script>
-/* v3: 하드코딩 POI 제거 - block.json을 fetch해 채운다 (POI_DATA는 init에서 구성) */
+
 let POI_DATA = [], BLOCK = null, OFFICE = null, ROUTES = [], FACTS = [], HISTORY = [];
 const PERF = { start: performance.now(), blockMs: 0, tilesMs: 0, firstFrameMs: 0, expandMs: 0 };
-/* P1 (2026-10-27, 아이템 #13): 초기 타일 시야 2km → 1km 로 축소해 첫 화면 전송 바이트를 낮추고,
-   첫 프레임 이후 유휴 시간에 2km 로 점진 확장한다. (후보 파일 전용, 라이브 paldal_showcase_real_v3.html 무변경) */
+
 const VIEW = { initialKm: 0.7, fullKm: 2.2, expandIdleMs: 1000, initialLod: 'lod2' };
 let viewExpanded = false;
 const KIND_LABEL = { office:'행정', landmark:'역사', market:'전통시장', local:'골목', healing:'힐링' };
@@ -319,7 +318,7 @@ let isOrbiting = false, currentTab = 'basic', radiusOn = true, selectedPoiId = n
 let targetCamPos = null, targetLookAt = null, angle = 0;
 let orbitHeight = 1600, orbitRadius = 2480, lastBuildingCount = 0, lastTileCount = 0;
 const scene = new THREE.Scene();
-/* C14: REF의 밝은 대기·도시 질감에 접근하되 UI 대비는 유지한다. */
+
 scene.background = new THREE.Color(0x8ba4b2);
 scene.fog = new THREE.Fog(0x8ba4b2, 3000, 25000);
 const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 1, 150000);
@@ -333,7 +332,7 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.62));
 scene.add(new THREE.HemisphereLight(0xcfe4ff, 0x52606a, 0.95));
 const dl = new THREE.DirectionalLight(0xfff6e2, 1.2);
 dl.position.set(-1000, 2500, 1500); scene.add(dl);
-/* [지형 시범] 지형 메쉬: 정점은 평면(y=-1)에 두고 셰이더가 높이를 올린다. 색은 고도·사면 음영을 구워 넣는다. */
+
 (function(){
   var ax=[-30000,-16000,-9000,-6500]; for(var v=-6000;v<=6000;v+=120)ax.push(v); ax.push(6500,9000,16000,30000);
   var n=ax.length,pos=new Float32Array(n*n*3),col=new Float32Array(n*n*3),idx=[];
@@ -351,8 +350,7 @@ dl.position.set(-1000, 2500, 1500); scene.add(dl);
 })();
 
 
-/* C14: 실제 창문 조사 데이터가 아니라, 세계좌표 3.4m×3.0m 격자의 절차적 파사드다.
-   외부 텍스처/요청 없이 하나의 기존 재질에서 계산하며, 원거리에서는 fwidth로 페이드한다. */
+
 const BUILDING_PALETTE = [0xfae6d0,0xf6d2b5,0xe8def7,0xd6eedc,0xfbe9d6,0xd9e6f3,0xf7c9b0,0xe2f0f7];
 function featureColor(f){
   const p=f.geometry.coordinates[0][0];
@@ -378,15 +376,14 @@ function createBuildingMaterial(vertexColors){
     shader.fragmentShader='varying vec3 vQualityWorldPos;\nvarying vec3 vQualityWorldNormal;\nvarying vec3 vQualityLocalPos;\n'+shader.fragmentShader;
     shader.uniforms.uNight={value:0}; (window.NIGHT_UNIS=window.NIGHT_UNIS||[]).push(shader.uniforms.uNight);
     shader.fragmentShader='uniform float uNight;\n'+shader.fragmentShader;
-    /* #8 야간 창문 불빛: 켜진 창(qualityLit)만 따뜻한 에미시브로. 추가 드로우콜 없음 */
+    
     shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n      totalEmissiveRadiance += vec3(1.0,0.78,0.38)*qualityWindow*qualityLit*uNight*1.8;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`
       #include <color_fragment>
       vec3 qualityN=normalize(vQualityWorldNormal);
       float qualityWall=1.0-smoothstep(0.45,0.75,abs(qualityN.y));
       float qualityU=abs(qualityN.x)>abs(qualityN.z)?vQualityWorldPos.z:vQualityWorldPos.x;
-      /* C15: 원거리에서 창문을 통째로 지우지 않고 3.4m→10.2m 파사드 LOD로 전환한다.
-         침묵 네트워크/추가 드로우콜 없이 건축물의 층계·벽체 대비를 유지한다. */
+      
       float qualityViewDistance=length(vQualityWorldPos-cameraPosition);
       float qualityDistanceLod=smoothstep(900.0,3200.0,qualityViewDistance);
       vec2 qualityBaseGrid=vec2(qualityU/3.4,vQualityWorldPos.y/3.0);
@@ -403,8 +400,7 @@ function createBuildingMaterial(vertexColors){
       vec2 qualityB=1.0-smoothstep(qualityHi-qualityAA,qualityHi+qualityAA,qualityCell);
       float qualityWindow=qualityA.x*qualityB.x*qualityA.y*qualityB.y*qualityWall*qualityVisible;
       float qualityLit=step(0.84,fract(sin(dot(floor(qualityGrid),vec2(12.9898,78.233)))*43758.5453));
-      /* C16: 근접 재질은 유지하고 원거리에서만 창문 명도를 낮춰 층계 대비를 강화한다.
-         벽면의 따뜻한 반사광과 휘도 기준 채도 보정으로 c15의 밝기·채도 손실을 보완한다. */
+      
       vec3 qualityNearWindowColor=mix(vec3(0.035,0.075,0.105),vec3(0.52,0.40,0.20),qualityLit*0.55);
       vec3 qualityFarWindowColor=mix(vec3(0.018,0.050,0.085),vec3(0.42,0.28,0.10),qualityLit*0.55);
       vec3 qualityWindowColor=mix(qualityNearWindowColor,qualityFarWindowColor,qualityDistanceLod);
@@ -414,24 +410,24 @@ function createBuildingMaterial(vertexColors){
       float qualityFacadeLuma=dot(qualityFacade,vec3(0.2126,0.7152,0.0722));
       qualityFacade=max(vec3(0.0),mix(vec3(qualityFacadeLuma),qualityFacade,1.0+0.217*qualityDistanceLod));
       diffuseColor.rgb=mix(qualityFacade,qualityWindowColor,qualityWindow*qualityWindowContrast);
-      /* #4 지붕·벽 명암 대비: 지붕은 밝게, 측면은 살짝 어둡게 */
-      /* Method 1: Alternating Floor Banding (6.4m cycle = 2.8px at 2200m) */
-      float qualityFloorPhase=fract(vQualityWorldPos.y/mix(6.4,19.2,qualityDistanceLod));/*FLOOR_FAR_PERIOD*/
+      
+      
+      float qualityFloorPhase=fract(vQualityWorldPos.y/mix(6.4,19.2,qualityDistanceLod));
       float qualityFloorBand=step(0.50,qualityFloorPhase)*qualityWall;
-      diffuseColor.rgb*=mix(mix(0.95,0.90,qualityDistanceLod),mix(1.04,1.09,qualityDistanceLod),qualityFloorBand);/*FLOOR_FAR_PATCH*/ { float qlf=floor(vQualityWorldPos.y/3.0); float qlh=fract(sin(dot(vec2(qlf,floor(qualityU/3.4)),vec2(12.9898,78.233)))*43758.5453); diffuseColor.rgb*=mix(0.94,1.04,qlh*qualityWall); }
+      diffuseColor.rgb*=mix(mix(0.95,0.90,qualityDistanceLod),mix(1.04,1.09,qualityDistanceLod),qualityFloorBand); { float qlf=floor(vQualityWorldPos.y/3.0); float qlh=fract(sin(dot(vec2(qlf,floor(qualityU/3.4)),vec2(12.9898,78.233)))*43758.5453); diffuseColor.rgb*=mix(0.94,1.04,qlh*qualityWall); }
 
-      /* Horizontal floor spandrel line (1.0m width, clearly visible at distance) */
+      
       float qualitySpandrel=step(0.75,fract(vQualityWorldPos.y/3.2))*qualityWall;
       diffuseColor.rgb*=mix(1.0,0.70,qualitySpandrel*0.20);
 
-      /* Method 1: Roof normal highlight vs Wall */
+      
       diffuseColor.rgb*=mix(0.80,1.30,step(0.75,qualityN.y));
-      /* Ground contact shadow: 0~8m */
+      
       diffuseColor.rgb*=mix(0.60,1.0,smoothstep(0.0,8.0,vQualityWorldPos.y));
-      /* 접지감: 건물 밑부분(지면~8m)을 정점 높이 기준으로 어둡게. 추가 드로우콜 없음 */
+      
       diffuseColor.rgb*=mix(0.68,1.0,smoothstep(0.0,8.0,vQualityWorldPos.y));
       #ifdef USE_INSTANCING
-        /* C14 V2: instance roof perimeter only; no triangulation lines or ground noise. */
+        
         float qualityRoof=step(0.75,qualityN.y)*step(0.95,vQualityLocalPos.y);
         vec2 qualityRoofDistance=0.5-abs(vQualityLocalPos.xz);
         float qualityNearest=min(qualityRoofDistance.x,qualityRoofDistance.y);
@@ -463,7 +459,7 @@ function prism(ring, h, pos, norm, col, base){
   for (const f of faces) for (const idx of f){
     const v = contour[idx]; pos.push(v.x, h, v.y); norm.push(0,1,0); col.push(base.r,base.g,base.b);
   }
-  /* C14: 기존에는 모든 벽면이 (0,0,1)이라 조명이 왜곡됐다. 윤곽 방향별 외측 법선을 계산한다. */
+  
   for (let i=0;i<contour.length;i++){
     const a = contour[i], b = contour[(i+1)%contour.length];
     const dx=b.x-a.x, dz=b.y-a.y, len=Math.hypot(dx,dz)||1, sign=area>=0?1:-1;
@@ -549,7 +545,7 @@ async function loadGround(km, half){
     G_FILL=new THREE.Mesh(gg,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}));
     scene.add(G_FILL);
   }
-  /* 공원·녹지 가로수(2026-11-02): 공원 면 안에 낮은 원뿔 나무를 인스턴싱으로 뿌린다. 드로우콜 +1 */
+  
   if (TREE_RINGS.length){
     const T=[]; let seed=12345;
     function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }
@@ -578,14 +574,7 @@ async function loadGround(km, half){
   }
   return {tiles:need.length, features:features};
 }
-/* ── #13 후보(클라인, 2026-10-26) — 인스턴싱 + 병렬 수신 ──────────────────────
-   근거: pilot/ref_check/item13_mobile3s_20261026.md
-     기준선(모바일 LTE 10Mbps·CPU4x) 첫 화면 6437ms / 4G 25601ms → 3초 초과.
-     타일 전송 5.04MB(23요청) + 순차 fetch + 사각 건물까지 정점으로 펼치는 비용이 원인.
-   변경 1) 타일 9건 순차 await → Promise.all 병렬 수신 (RTT×타일수 만큼 손해 제거)
-   변경 2) lod2(사각 근사) 건물은 정점 병합 대신 InstancedMesh 1회 드로우 (메모리·CPU 절감)
-   시각 동일성: lod2 링이 축정렬 사각(5점·x2종·y2종)일 때만 인스턴스로 바꾸고, 아니면 기존 prism 경로.
-     사각 인스턴스 지오메트리는 바닥면을 뺀 5면(10삼각형) → 기존 prism 과 삼각형 수가 같다. */
+
 function unitBoxNoBottom(){
   const p=[], n=[];
   function quad(a,b,c,d,nx,ny,nz){
@@ -671,7 +660,7 @@ async function loadTiles(km, forcedLod, includeGround){
   lastBuildingCount=buildings; lastTileCount=need.length;
   stat.innerHTML='타일 '+need.length+'개 · 건물 '+buildings.toLocaleString()+'동(실측) · 인스턴스 '+boxes.length.toLocaleString()+'동 · 바닥 '+gt.features.toLocaleString()+'개 · '+ms+'ms';
 }
-/* P1: 첫 프레임 이후 유휴 시점에 시야를 VIEW.fullKm 로 1회 확장 (중복 실행 방지) */
+
 function scheduleViewExpand(){
   if (viewExpanded) return;
   const run=async function(){
@@ -694,7 +683,7 @@ const markerObjects=[];
 scene.add(markerGroup); scene.add(radiusGroup); scene.add(routeGroup); scene.add(routeNumberGroup);
 
 function makeSprite(text, color, wUnits, hUnits){
-  /* 캔버스를 정사각(128×128)으로 두고 배지는 가로로 넓은 라운드 사각형 → 스프라이트를 정사각 스케일해도 숫자가 찌그러지지 않는다 */
+  
   const c=document.createElement('canvas'); c.width=128; c.height=128;
   const g=c.getContext('2d');
   g.fillStyle='rgba(11,17,30,0.9)'; g.strokeStyle=color; g.lineWidth=8;
@@ -717,7 +706,7 @@ function disposeObj(o){
     }
   });
 }
-/* block.json에서 읽은 POI_DATA만으로 마커를 만든다 (하드코딩 좌표 없음) */
+
 function buildMarkers(){
   while(markerGroup.children.length){ const c=markerGroup.children.pop(); disposeObj(c); }
   markerObjects.length=0;
@@ -773,7 +762,7 @@ function haversineM(a,b){
   const s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a[1]*rad)*Math.cos(b[1]*rad)*Math.sin(dLon/2)*Math.sin(dLon/2);
   return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
 }
-/* block.json → 화면 데이터 (모든 탭의 유일한 원천) */
+
 function normBlock(b){
   BLOCK=b;
   FACTS=(b.basic&&b.basic.facts)||[];
@@ -919,7 +908,7 @@ function switchTab(tabKey){
   document.querySelectorAll('.main-tab-btn').forEach(function(b){
     const on=(b.getAttribute('data-tab')===tabKey);
     b.classList.toggle('active', on);
-    /* 모바일은 탭 바가 가로 스크롤이라, 선택한 탭이 화면 밖이면 가운데로 당겨온다 */
+    
     if(on && innerWidth<=860 && b.scrollIntoView) b.scrollIntoView({block:'nearest', inline:'center'});
   });
   closeModal();
@@ -977,7 +966,7 @@ function fmtM(m){
   if(!isFinite(m)) return '-';
   return (m>=1000) ? (m/1000).toFixed(2)+'km' : (Math.round(m)+'m');
 }
-/* 코스 제목: block.json title에 이미 "1일 코스 —"가 들어 있어 접두를 떼고 다시 붙인다 */
+
 function routeLabel(r){
   const n=Number(r&&r.days)||1;
   const t=String((r&&r.title)||('코스 '+n)).replace(/^\s*\d+\s*일\s*코스\s*[—\-–:·]?\s*/,'');
@@ -1004,7 +993,7 @@ function renderHeritage(){
   overview(1500,2100);
 }
 
-/* [지형 시범] CPU 레이캐스트도 지형 높이만큼 올려서 판정한다(마커 hit 메쉬만). */
+
 (function(){var orig=THREE.Mesh.prototype.raycast;THREE.Mesh.prototype.raycast=function(rc,ints){
   if(this.userData&&this.userData.poiId&&window.terrainH){this.updateWorldMatrix(true,false);var e=this.matrixWorld.elements,old=e[13],h=terrainH(e[12],e[14]);e[13]=old+h;
     try{orig.call(this,rc,ints)}finally{e[13]=old}}
@@ -1049,11 +1038,11 @@ function renderHealing(){
   bindItems();
   overview(1500,2100);
 }
-/* #4 계층 라벨: labels_hierarchy.json의 구·동·명소 라벨을 카메라 높이에 따라 단계별로 켠다 */
+
 const HIER = {levels: [], items: []};
-/* #4 라벨 전용 스프라이트: 글자 길이에 맞춰 캔버스 폭을 늘려 글자가 잘리지 않게 한다 */
+
 function makeLabelSprite(text, color, hUnits){
-  /* 밝은 지도용 칩 라벨: 흰 칩 + 진한 글자 + 레벨색 점(참고 #4 스타일) */
+  
   const fs = 54, pad = 26, dot = 44;
   const c = document.createElement('canvas'); const g0 = c.getContext('2d');
   g0.font = 'bold ' + fs + 'px "Malgun Gothic", sans-serif';
@@ -1077,8 +1066,7 @@ function makeLabelSprite(text, color, hUnits){
   sp.userData.w = sp.scale.x; sp.userData.h = sp.scale.y;
   return sp;
 }
-/* #8 환경 동기화: 접속 시각에 맞춰 낮·노을·밤·새벽 4단 조명을 자동 적용(외부 요청 0). 버튼으로 자동/낮/밤을 순환한다.
-   날씨는 외부 호출 없이 쓰기 위해 weather.json(주기적으로 서버가 갱신)이 있을 때만 읽는다. */
+
 const ENV_PRESETS = {
   day:    {name:'☀️ 낮',  sky:0xe9cfa6, grad:['#5b8fd8','#a9c8ee','#f7dcae'], fog:[3000,25000], amb:[0xffffff,0.42], hemi:[0xdbe8f8,0x8f8a7e,0.92], sun:[0xfff3dc,1.95]},
   golden: {name:'🌆 노을', sky:0x4a3a4e, fog:[2600,22000], amb:[0xfdba74,0.45], hemi:[0xfdba74,0x3b2f3a,0.7],  sun:[0xf97316,1.35]},
@@ -1112,7 +1100,7 @@ function toggleDayNight(){
   ENV_MODE = order[(order.indexOf(ENV_MODE)+1) % order.length];
   applyEnv(ENV_MODE==='auto' ? envByClock() : ENV_MODE);
 }
-/* #8 날씨: 같은 폴더의 weather.json({condition:'clear|cloudy|rain|snow'})만 읽는다. 외부 호출 없음. ?weather=rain 으로 시험 가능 */
+
 const WX = {cond:'clear', pts:null, vel:null};
 function applyWeather(cond){
   WX.cond = cond;
@@ -1170,15 +1158,15 @@ function updateHierarchyLabels(){
     if(on && it.sp.userData.w){ const d = camera.position.distanceTo(it.sp.position); const k = Math.min(0.85, Math.max(0.16, d/2800)); it.sp.scale.set(it.sp.userData.w*k, it.sp.userData.h*k, 1); }
   });
 }
-/* #4 수면 레이어: water_meshes.json의 수면 폴리곤을 반투명 메쉬로 올린다 */
+
 async function addWaterLayer(){
   try{
     const W = await fetch('water_meshes.json', {cache:'no-store'}).then(function(r){ return r.json(); });
     (W.water_bodies||[]).forEach(function(wb){
       let pts = wb.polygon||[];
       if(!pts.length && wb.linestring && wb.linestring.length>1){
-        /* 선형 수면(하천): 좌우로 폭/2만큼 벌려 띠 폴리곤을 만든다 */
-        const hw = Math.max((wb.width_meters||12)/2, 24); /* 첫 화면에서 보이도록 최소 폭 48 유지 */
+        
+        const hw = Math.max((wb.width_meters||12)/2, 24); 
         const P = wb.linestring.map(function(q){ return toXZ(q[0], q[1]); });
         const L = [], R = [];
         P.forEach(function(p,i){
@@ -1223,7 +1211,7 @@ function animate(){
   updateWeather();
   const time=Date.now()*0.003;
   markerObjects.forEach(m=>{ const s=1.0+Math.sin(time+m.x)*0.15; m.ring.scale.set(s,s,s); });
-  /* 코스 번호는 카메라 거리에 비례해 키워 화면상 크기를 일정하게 유지한다(멀리서도 읽히게) */
+  
   if(routeNumberGroup.visible){
     routeNumberGroup.children.forEach(function(sp){
       const u=routeNumScale(camera.position.distanceTo(sp.position));
@@ -1263,16 +1251,13 @@ function renderRoadmap(){
   h+='<div class="src-note">정류를 클릭하면 해당 지점으로 카메라가 이동합니다.</div>';
   document.getElementById('panel-body').innerHTML=h;
   bindItems();
-  /* 정류 전체가 화면(패널·탭바 제외)에 들어오도록 카메라를 자동 계산하고, 번호를 겹침 없이 배치한다 */
+  
   frameRoutes();
-  /* lerp를 기다리면 번호 배치와 실제 화면이 어긋나므로, 계산한 프레임으로 바로 이동한다 */
+  
   if(targetCamPos){ camera.position.copy(targetCamPos); camera.lookAt(targetLookAt); }
   layoutRouteNumbers();
 }
-/* ===== 로드맵 카메라 프레이밍 & 코스 번호 배치 =========================
-   번호 스프라이트는 카메라 거리에 비례해 커지므로(화면상 크기 일정) 화면 픽셀
-   좌표로 변환해 배치한다. 위쪽 정류부터 "겹치지 않는 첫 칸"을 잡고,
-   칸이 비어 있지 않으면 위/아래로 한 칸씩 밀어 번호가 포개지지 않게 한다. */
+
 function routeNumScale(d){ return Math.max(70, Math.min(210, d*0.035)); }
 function routeCanvasPts(){
   const pts=[];
@@ -1285,7 +1270,7 @@ function routeCanvasPts(){
   });
   return pts;
 }
-/* 좌측 패널·상단 탭바·우측 컨트롤에 가리지 않는 화면 영역(px) */
+
 function routeSafeRect(){
   const mob=innerWidth<=860;
   return {
@@ -1347,13 +1332,13 @@ function layoutRouteNumbers(){
     v.set(it.x, yWorld, it.z).project(probe);
     return {x:(v.x*0.5+0.5)*innerWidth, y:(0.5-v.y*0.5)*innerHeight};
   }
-  /* 월드 y +1m가 화면에서 몇 px 위로 가는지(카메라 기울기 반영) + 정류의 기준 화면 좌표 */
+  
   list.forEach(function(it){
     const a=screen(it, it.base), b=screen(it, it.base+200);
     it.ax=a.x; it.ay=a.y;
     it.dyPerM=Math.max(0.004, (a.y-b.y)/200);
   });
-  /* 화면 위쪽 정류부터 차례로 "겹치지 않는 첫 칸"에 놓는다 → 번호가 포개지지 않는다 */
+  
   list.sort(function(a,b){ return a.ay-b.ay; });
   const placed=[];
   list.forEach(function(it){
@@ -1372,7 +1357,7 @@ function layoutRouteNumbers(){
     }
     if(!best) best={x:it.ax, y:it.ay, w:it.w, h:it.h};
     placed.push(best);
-    /* 화면에서 올린 만큼 월드 y를 높인다(내리면 낮춘다) */
+    
     it.y=it.base+(it.ay-best.y)/it.dyPerM;
   });
   list.forEach(function(it){
@@ -1401,7 +1386,7 @@ function renderDrone(){
   h+='<div class="src-note">건물·타일 수치는 로컬 타일에서 센 값이고, 명소·좌표는 block.json에서 읽습니다.</div>';
   document.getElementById('panel-body').innerHTML=h;
 }
-/* 지상 반투명 원 = block.json highlight_radius_m (미터 = 월드 단위) */
+
 function buildRadius(){
   while(radiusGroup.children.length){ const c=radiusGroup.children.pop(); disposeObj(c); }
   POI_DATA.forEach(function(p){
@@ -1417,7 +1402,7 @@ function buildRadius(){
     radiusGroup.add(disc); radiusGroup.add(ring);
   });
 }
-/* 로드맵: stops 순서대로 직선 연결 + 번호 스프라이트 */
+
 function buildRoutes(){
   while(routeGroup.children.length){ const c=routeGroup.children.pop(); disposeObj(c); }
   while(routeNumberGroup.children.length){ const c=routeNumberGroup.children.pop(); disposeObj(c); }
@@ -1440,8 +1425,7 @@ function buildRoutes(){
     }
     pts.forEach(function(v, i){
       const spColor=(r.days===1)?'#bfdbfe':'#fbd5e5';
-      /* 1일 코스는 낮게, 2일 코스는 높게 띄운다 → 화서문처럼 두 코스가 같은 정류지를
-         공유해도 번호가 완전히 포개지지 않는다(겹치면 layoutRouteNumbers가 더 올린다) */
+      
       const baseY=(r.days===1)?110:250;
       const sp=makeSprite(String(i+1), spColor, 100, 100);
       sp.position.set(v.x, baseY, v.z);
@@ -1493,7 +1477,7 @@ function updateIntroInfo(){
   MAN=await (await fetch('tiles_1000m/tiles_manifest.json')).json();
   try { const r=await fetch('tiles_1000m/ground_manifest.json'); GMAN=r.ok?await r.json():null; } catch(e){ GMAN=null; }
   buildMarkers();
-  ensureBaseGround(); /* C14: 상세 바닥을 기다리지 않고 첫 프레임부터 건축물을 지면에 안착 */
+  ensureBaseGround(); 
   const tt=performance.now();
   await loadTiles(VIEW.initialKm, VIEW.initialLod, false);
   PERF.tilesMs=performance.now()-tt;
@@ -1513,24 +1497,16 @@ function updateIntroInfo(){
 
 </script>
 
-<!-- ============================================================================
-     [3AI 상용화급 종로 3D 공간 플랫폼 v2.1]
-     - 기존 33개 중복 버튼/모달/외부앱 셔틀 완전 철거 (화면 85% 순수 3D 뷰포트 확보)
-     - 피망 Phase 1~20 전수 데이터(36개 거점) Three.js 월드 좌표(toXZ + terrainH) 실체 매핑
-     - 쓰레드 REF 3대 감성:
-       1) #BAT8R078eF: 3호선·5호선 지하철 & 종로 간선버스 3D 실시간 주행 애니메이션 + 라이브 태그
-       2) #lani_0319 / #sunstation.dev: 청계천 에메랄드 물결 셰이더 & 북촌·청계천 소원 등불 160개 부유 + 사계절 일조궤적
-       3) #akihiro.t29 / #caitlynmilos: 관철동·인사동 200m 거리 다이빙 & 안심귀가 3D 네온패스 + 인앱 공간 카드
-     ============================================================================ -->
+
 <style>
-  /* 기존 레거시 복잡 UI 전수 숨김 (3D 지도 뷰포트 85% 이상 확보) */
+  
   #header-bar, #top-tab-bar, #sidebar, #controls, #poi-modal, #tile-stat, #ext-badge, #intro-overlay {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
-  /* 3D AR 플로팅 콜아웃 레이어 */
+  
   #ar-callout-layer {
     position: fixed;
     inset: 0;
@@ -1591,7 +1567,7 @@ function updateIntroInfo(){
     border-radius: 7px;
   }
 
-  /* 실시간 주행 교통(지하철·버스) 라이브 AR 태그 */
+  
   .ar-transit-tag {
     position: absolute;
     transform: translate(-50%, -120%);
@@ -1618,7 +1594,7 @@ function updateIntroInfo(){
     box-shadow: 0 0 6px #4ade80;
   }
 
-  /* 상단 미니멀 글래스 앱 헤더 */
+  
   #commercial-top-ui {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 8px);
@@ -1714,7 +1690,7 @@ function updateIntroInfo(){
     color: #7dd3fc;
   }
 
-  /* 6대 공간 카테고리 스와이프 바 */
+  
   .cat-scroll-row {
     display: flex;
     align-items: center;
@@ -1756,7 +1732,7 @@ function updateIntroInfo(){
     border-radius: 7px;
   }
 
-  /* D: 시간/일조/야간등불 슬라이더 & C: 스카이투어 비행 컨트롤 바 */
+  
   #time-tour-bar {
     display: flex;
     align-items: center;
@@ -1811,7 +1787,7 @@ function updateIntroInfo(){
     border-color: #fca5a5;
   }
 
-  /* 하단 미니멀 공간 도크 & 인앱 상세 카드 */
+  
   #commercial-bottom-ui {
     position: fixed;
     left: 8px;
@@ -1826,7 +1802,7 @@ function updateIntroInfo(){
     margin: 0 auto;
   }
 
-  /* 가로 스와이프 미니 스팟 캐러셀 (1줄 컴팩트) */
+  
   #spot-carousel {
     display: flex;
     gap: 6px;
@@ -1879,7 +1855,7 @@ function updateIntroInfo(){
     text-overflow: ellipsis;
   }
 
-  /* 하단 4대 원탭 3D 시연 도크 바 */
+  
   #quick-mode-dock {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1917,7 +1893,23 @@ function updateIntroInfo(){
     color: #f8fafc;
   }
 
-  /* 인앱 공간 상세 시트 (기성앱 튕김 제로! 맵 안에서 모든 정보·3D 액션 완결) */
+  #spatial-license-bar {
+    background: rgba(11, 17, 30, 0.90);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 10px;
+    padding: 3.5px 8px;
+    font-size: 8.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: auto;
+    letter-spacing: -0.2px;
+  }
+
+  
   #inapp-detail-sheet {
     display: none;
     flex-direction: column;
@@ -2037,7 +2029,7 @@ function updateIntroInfo(){
     border-top: 1px solid rgba(148, 163, 184, 0.14);
   }
 
-  /* 토스트 알림 */
+  
   #spatial-toast {
     position: fixed;
     top: calc(env(safe-area-inset-top, 0px) + 148px);
@@ -2062,20 +2054,20 @@ function updateIntroInfo(){
   }
 </style>
 
-<!-- 3D AR 플로팅 콜아웃 컨테이너 -->
+
 <div id="ar-callout-layer"></div>
 
-<!-- 토스트 알림 -->
+
 <div id="spatial-toast"></div>
 
-<!-- 상단 미니멀 글래스 앱 헤더 & 6대 공간 필터 -->
+
 <div id="commercial-top-ui">
   <div class="top-bar-row">
     <div class="app-brand">
       <a class="back-pill" id="app-back-link" href="../../m/index.html" title="목록으로">‹</a>
       <div class="brand-text-wrap">
         <div class="brand-main" id="ui-brand-title">서울 종로구 3D 공간지도</div>
-        <div class="brand-sub" id="ui-brand-sub">실측 3,581동 · Phase 1-20 통합</div>
+        <div class="brand-sub" id="ui-brand-sub">실측 3,581동 · 공공누리·ODbL·CC BY 4.0</div>
       </div>
     </div>
     <div class="top-actions">
@@ -2102,7 +2094,7 @@ function updateIntroInfo(){
   </div>
 </div>
 
-<!-- 하단 미니멀 공간 도크 & 인앱 상세 시트 -->
+
 <div id="commercial-bottom-ui">
   <div id="inapp-detail-sheet">
     <div class="sheet-head">
@@ -2123,7 +2115,7 @@ function updateIntroInfo(){
       <button class="inapp-act-btn" onclick="draw3DWalkPathToNode()">✨ 3D 보행경로 연결</button>
     </div>
     <div class="sheet-foot">
-      <span id="sh-source">출처: 피망 Phase 1-20 공인 공간데이터</span>
+      <span id="sh-source">출처: 국토부·문화재청·행안부(공공누리 제1유형) · OSM(ODbL) · Open-Meteo(CC BY 4.0)</span>
       <span id="sh-hours">상시 개방</span>
     </div>
   </div>
@@ -2144,14 +2136,17 @@ function updateIntroInfo(){
       <span class="d-ico">🏮</span><span class="d-txt">청계천·야경</span>
     </button>
   </div>
+  <div id="spatial-license-bar">
+    📄 출처·라이선스: 도로·성곽 © OpenStreetMap(ODbL) · 고도 © Open-Meteo(CC BY 4.0) · 건축물·행정·문화재(공공누리 제1유형)
+  </div>
 </div>
 
 <script>
-// ============================================================================
-// [안티 3D 공간 플랫폼 코어 엔진 v2.1]
-// ============================================================================
+
+
+
 (function(){
-  // 0. 인트로 오버레이 즉시 해제
+
   function dismissIntroImmediately(){
     var o = document.getElementById('intro-overlay');
     if(o){ o.style.opacity = '0'; o.style.display = 'none'; o.style.visibility = 'hidden'; }
@@ -2174,9 +2169,8 @@ function updateIntroInfo(){
     _toastTimer = setTimeout(function(){ t.style.opacity = '0'; }, 2600);
   };
 
-  // 1. 피망 Phase 1~20 전수 공간 노드 데이터 (shortName 추가로 모바일 3D AR 콜아웃 가독성 극대화)
   var SPATIAL_NODES = [
-    // [궁궐·명소·성곽 (Phase 1, 8, 9)]
+
     {
       id: 'p_gyeongbokgung', cat: 'heritage', icon: '🏛️', color: '#eab308',
       short: '경복궁', short_en: 'Gyeongbokgung',
@@ -2186,7 +2180,7 @@ function updateIntroInfo(){
       specs: ['♿ 경사로·휠체어대여·점자블록', '☀️ 하지 남중 75.8° 일조', '🏛️ 조선 왕조 제1법궁'],
       story: '1395년 창건된 조선 왕조의 법궁입니다. 근정전·경회루 권역 전체에 무장애 경사로와 전용 엘리베이터, 점자 안내판이 완비되어 있습니다.',
       story_en: 'Main royal palace of Joseon Dynasty (1395), fully equipped with barrier-free ramps, tactile paving, and audio guides.',
-      hours: '09:00 - 18:00 (화요일 휴궁)', source: '피망 Phase 1·8 문화재청·무장애 공인 데이터'
+      hours: '09:00 - 18:00 (화요일 휴궁)', source: '문화재청·국토교통부 VWorld (공공누리 제1유형)'
     },
     {
       id: 'p_changdeokgung', cat: 'heritage', icon: '🏯', color: '#f59e0b',
@@ -2197,7 +2191,7 @@ function updateIntroInfo(){
       specs: ['♿ 무장애 관람동선 1.8km', '🏮 달빛기행 야간개장', '🌳 자연지형 조화 궁궐'],
       story: '북악산 왼쪽 봉우리 기슭에 자연 지형과 조화를 이루며 지어진 유네스코 세계문화유산으로, 주간 산책과 달빛기행 야경이 모두 뛰어납니다.',
       story_en: 'UNESCO World Heritage palace renowned for its harmony with natural topography and the Secret Garden.',
-      hours: '09:00 - 18:00 (월요일 휴궁)', source: '피망 Phase 1·8 종로 랜드마크 데이터'
+      hours: '09:00 - 18:00 (월요일 휴궁)', source: '공공 공간데이터 Phase 1·8 종로 랜드마크 데이터'
     },
     {
       id: 'p_gwanghwamun_sq', cat: 'heritage', icon: '🗽', color: '#38bdf8',
@@ -2208,7 +2202,7 @@ function updateIntroInfo(){
       specs: ['♿ 지하보도 엘리베이터 완비', '🏮 미디어파사드 야경', '⛲ 명량분수·역사수길'],
       story: '북악산과 경복궁의 스카이라인을 한눈에 조망하는 대한민국 대표 국가 상징 광장입니다. 광장 숲과 미디어파사드가 연중 운영됩니다.',
       story_en: 'National symbolic plaza offering unobstructed views of Gyeongbokgung and Bugaksan Mountain.',
-      hours: '24시간 상시 개방', source: '피망 Phase 1·6·8 통합 데이터'
+      hours: '24시간 상시 개방', source: '공공 공간데이터 Phase 1·6·8 통합 데이터'
     },
     {
       id: 'p_bukchon', cat: 'heritage', icon: '🏘️', color: '#fbbf24',
@@ -2219,7 +2213,7 @@ function updateIntroInfo(){
       specs: ['🏘️ 전통한옥 900여 채 밀집', '🏮 야간 골목 조도 개선', '📸 도심 파노라마 전망'],
       story: '경복궁과 창덕궁 사이 600년 역사 도심 한옥 주거지입니다. 지형 고도를 따라 계단식으로 펼쳐진 기와지붕과 서울 도심 전망이 어우러집니다.',
       story_en: 'Historic residential quarter featuring over 900 traditional Korean houses (Hanok) between two palaces.',
-      hours: '10:00 - 17:00 (정숙 관람시간)', source: '피망 Phase 1·6 종로문화관광 데이터'
+      hours: '10:00 - 17:00 (정숙 관람시간)', source: '공공 공간데이터 Phase 1·6 종로문화관광 데이터'
     },
     {
       id: 'p_insadong', cat: 'heritage', icon: '🎨', color: '#f97316',
@@ -2230,7 +2224,7 @@ function updateIntroInfo(){
       specs: ['♿ 경사로·장애인화장실', '🍽️ 안심식당·전통찻집 밀집', '🚶 주말 차없는 보행전용'],
       story: '고미술품, 화랑, 필방, 전통 찻집이 골목마다 살아 숨 쉬는 한국 전통문화의 중심 거리입니다.',
       story_en: 'Vibrant pedestrian street lined with traditional tea houses, art galleries, and craft shops.',
-      hours: '10:00 - 22:00', source: '피망 Phase 1·8·16 공인 데이터'
+      hours: '10:00 - 22:00', source: '공공 공간데이터 Phase 1·8·16 공인 데이터'
     },
     {
       id: 'p_citywall_baegak', cat: 'heritage', icon: '⛰️', color: '#facc15',
@@ -2241,7 +2235,7 @@ function updateIntroInfo(){
       specs: ['🧱 OSM 실측 성곽 3D 메쉬', '🥾 도성 스카이 트레킹 4.7km', '🏔️ 고도 342m 능선 조망'],
       story: '1396년 축조된 서울 한양도성의 핵심 산악 성곽 구간입니다. 3D 지형 능선을 따라 이어지는 적갈색 성곽 라인을 입체적으로 확인할 수 있습니다.',
       story_en: 'Mountain ridge fortress wall built in 1396 along Bugaksan, rendered directly on the 3D DEM terrain.',
-      hours: '09:00 - 17:00', source: '피망 Phase 1·9 한양도성 데이터'
+      hours: '09:00 - 17:00', source: '공공 공간데이터 Phase 1·9 한양도성 데이터'
     },
     {
       id: 'p_bosingak', cat: 'heritage', icon: '🔔', color: '#fb923c',
@@ -2252,7 +2246,7 @@ function updateIntroInfo(){
       specs: ['🔔 매년 제야의 종 타종지', '🚇 1호선 종각역 직결', '🚶 관철동 200m 보행존 기점'],
       story: '조선 시대 한양 도성 중앙에서 시각을 알리고 사대문 개폐를 주관하던 종루로, 종로 보행 상권의 상징적 출발점입니다.',
       story_en: 'Historic bell pavilion at the center of old Seoul, marking the gateway to Gwancheol-dong Youth Street.',
-      hours: '상시 관람 (타종체험 화요일)', source: '피망 Phase 1 종로 역사문화 데이터'
+      hours: '상시 관람 (타종체험 화요일)', source: '공공 공간데이터 Phase 1 종로 역사문화 데이터'
     },
     {
       id: 'p_marronnier', cat: 'heritage', icon: '🎭', color: '#a855f7',
@@ -2263,10 +2257,9 @@ function updateIntroInfo(){
       specs: ['🎭 야외공연장·아르코예술극장', '🌳 마로니에 수목 산책로', '🚇 4호선 혜화역 환승거점'],
       story: '옛 서울대학교 문리대 터에 조성된 문화예술 공원으로 주변에 150여 개 연극 소극장이 밀집해 있습니다.',
       story_en: 'Heart of Korean performing arts surrounded by over 150 small theaters and cultural venues.',
-      hours: '24시간 개방', source: '피망 Phase 1·9 도시공원 데이터'
+      hours: '24시간 개방', source: '공공 공간데이터 Phase 1·9 도시공원 데이터'
     },
 
-    // [실시간 3D 교통·EV (Phase 4, 15, REF #1 BAT8R078eF)]
     {
       id: 'p_stn_gyeongbok', cat: 'transit', icon: '🚇', color: '#f97316',
       short: '경복궁역(3)', short_en: 'Gyeongbok Stn',
@@ -2276,7 +2269,7 @@ function updateIntroInfo(){
       specs: ['🚇 3호선 구파발·오금 양방향', '♿ 엘리베이터 3기·리프트', '🚌 서촌·청와대 환승버스 18개'],
       story: '3호선 주황색 3D 열차가 실시간으로 주행하는 궁궐 서측 핵심 지하철 환승역입니다. 메트로 미술관과 무장애 엘리베이터가 운영됩니다.',
       story_en: 'Line 3 subway hub with live 3D train movement visualization and direct palace access.',
-      hours: '05:30 - 24:40', source: '피망 Phase 4 대중교통·환승 데이터'
+      hours: '05:30 - 24:40', source: '공공 공간데이터 Phase 4 대중교통·환승 데이터'
     },
     {
       id: 'p_stn_anguk', cat: 'transit', icon: '🚇', color: '#f97316',
@@ -2287,7 +2280,7 @@ function updateIntroInfo(){
       specs: ['🚇 북촌·인사동·창덕궁 연결', '♿ 4번출구 무장애 엘리베이터', '📦 스마트 안심보관함 설치'],
       story: '북촌 한옥마을과 인사동, 창덕궁을 잇는 3호선 중심역으로 지능형 CCTV와 무장애 환승 동선이 구축되어 있습니다.',
       story_en: 'Smart subway station connecting Bukchon, Insadong, and Changdeokgung Palace.',
-      hours: '05:30 - 24:42', source: '피망 Phase 4 대중교통 데이터'
+      hours: '05:30 - 24:42', source: '공공 공간데이터 Phase 4 대중교통 데이터'
     },
     {
       id: 'p_stn_gwanghwamun', cat: 'transit', icon: '🚇', color: '#a855f7',
@@ -2298,7 +2291,7 @@ function updateIntroInfo(){
       specs: ['🚇 5호선 보라색 3D 열차 주행', '♿ 해치마당 무장애 경사로', '🚌 광화문 중앙버스차로 직결'],
       story: '광화문광장 해치마당과 지하로 직결되는 5호선 핵심 역으로 세종대로 중앙버스전용차로와 입체 환승됩니다.',
       story_en: 'Line 5 underground hub directly connected to Gwanghwamun Square Haechi Madang.',
-      hours: '05:35 - 24:38', source: '피망 Phase 4 대중교통 데이터'
+      hours: '05:35 - 24:38', source: '공공 공간데이터 Phase 4 대중교통 데이터'
     },
     {
       id: 'p_stn_jongno3', cat: 'transit', icon: '🚉', color: '#06b6d4',
@@ -2309,7 +2302,7 @@ function updateIntroInfo(){
       specs: ['🚇 1·3·5호선 3D 입체교차', '🚶 익선동·묘동·인사동 직결', '♿ 환승 엘리베이터 5기 가동'],
       story: '수도권 전철 1호선, 3호선, 5호선이 입체 교차하는 종로 최대의 대중교통 허브입니다.',
       story_en: 'Major triple-line subway transfer hub intersecting Lines 1, 3, and 5.',
-      hours: '05:25 - 24:50', source: '피망 Phase 4 대중교통 데이터'
+      hours: '05:25 - 24:50', source: '공공 공간데이터 Phase 4 대중교통 데이터'
     },
     {
       id: 'p_bus_jongno_corridor', cat: 'transit', icon: '🚌', color: '#3b82f6',
@@ -2320,7 +2313,7 @@ function updateIntroInfo(){
       specs: ['🚌 간선 470·101·150·721 실시간', '🌡️ 스마트 온열의자·공기청정쉘터', '♿ 저상버스 100% 정차 정류소'],
       story: '세종대로에서 동대문까지 종로를 동서로 관통하는 중앙버스전용차로입니다. 3D 버스 캡슐이 도로를 따라 실시간 주행합니다.',
       story_en: 'Median bus rapid transit corridor along Jongno with live 3D bus flow visualization.',
-      hours: '24시간 (심야 올빼미버스 N15·N26 운행)', source: '피망 Phase 4 & 쓰레드 REF #BAT8R078eF'
+      hours: '24시간 (심야 올빼미버스 N15·N26 운행)', source: '공공 공간데이터 Phase 4 & 쓰레드 REF #BAT8R078eF'
     },
     {
       id: 'p_ev_jongno_office', cat: 'transit', icon: '⚡', color: '#10b981',
@@ -2331,7 +2324,7 @@ function updateIntroInfo(){
       specs: ['⚡ DC콤보·차데모 초급속 8기', '🟢 현재 충전가능 6면 여유', '🅿️ 친환경차 주차료 50% 감면'],
       story: '종로구청사 공영주차장 내 구축된 환경부 공인 무공해차 급속충전 거점으로 24시간 개방됩니다.',
       story_en: '24-hour public EV fast-charging hub equipped with 8 DC Combo & CHAdeMO chargers.',
-      hours: '24시간 연중무휴', source: '피망 Phase 15 환경부 EV 급속충전 데이터'
+      hours: '24시간 연중무휴', source: '공공 공간데이터 Phase 15 환경부 EV 급속충전 데이터'
     },
     {
       id: 'p_ev_sejong_parking', cat: 'transit', icon: '🅿️', color: '#0ea5e9',
@@ -2342,7 +2335,7 @@ function updateIntroInfo(){
       specs: ['🅿️ 총 1,260면 대규모 지하주차', '⚡ EV 급속·완속 충전소 완비', '♿ 장애인 전용주차 42면'],
       story: '광화문광장과 세종문화회관 방문객을 위한 도심 최대 규모 스마트 공영주차장 및 전기차 충전 거점입니다.',
       story_en: 'Large-scale underground smart parking facility and EV charging station next to Gwanghwamun.',
-      hours: '24시간 운영', source: '피망 Phase 4·15 주차·충전 통합 데이터'
+      hours: '24시간 운영', source: '공공 공간데이터 Phase 4·15 주차·충전 통합 데이터'
     },
     {
       id: 'p_ev_insadong', cat: 'transit', icon: '⚡', color: '#22d3ee',
@@ -2353,10 +2346,9 @@ function updateIntroInfo(){
       specs: ['⚡ 100kW 듀얼 급속충전기', '🚶 인사동·조계사 도보 2분', '📱 QR 스마트 간편결제'],
       story: '인사동 문화거리와 조계사 인접 공영주차장에 설치된 도심형 급속충전 스테이션입니다.',
       story_en: 'Fast EV charging station serving visitors to Insadong Cultural Street and Jogyesa Temple.',
-      hours: '08:00 - 23:00', source: '피망 Phase 15 EV 급속충전 데이터'
+      hours: '08:00 - 23:00', source: '공공 공간데이터 Phase 15 EV 급속충전 데이터'
     },
 
-    // [청계천·야경·사계절 축제 (Phase 6, 11, 12, 18, REF #2 lani_0319 / sunstation.dev)]
     {
       id: 'p_cheonggye_lantern', cat: 'night', icon: '🏮', color: '#38bdf8',
       short: '청계천유등존', short_en: 'Cheonggye Stream',
@@ -2366,7 +2358,7 @@ function updateIntroInfo(){
       specs: ['🌊 실시간 수면 파동 셰이더', '🏮 소원 등불 160개 부유 연출', '♿ 수변 경사로·징검다리 산책로'],
       story: '청계광장 폭포에서 광통교·장통교로 이어지는 도심 수변 생태 축입니다. 에메랄드빛 물결 셰이더와 밤하늘로 떠오르는 소원 등불을 감상할 수 있습니다.',
       story_en: 'Urban stream corridor featuring animated water ripple shaders and glowing floating wish lanterns.',
-      hours: '24시간 개방 (야간 유등 조명 18:00~23:00)', source: '피망 Phase 6·11 & 쓰레드 REF #lani_0319'
+      hours: '24시간 개방 (야간 유등 조명 18:00~23:00)', source: '서울시설공단 청계천·문화관광 (공공누리 제1유형) & OpenStreetMap(ODbL)'
     },
     {
       id: 'p_bukchon_night', cat: 'night', icon: '🌙', color: '#fbbf24',
@@ -2377,7 +2369,7 @@ function updateIntroInfo(){
       specs: ['🏮 한옥 처마 황금빛 야간조명', '☀️ 사계절 일조 남중 29°~75.8°', '📸 서울 도심 야경 베스트 포토존'],
       story: '해 질 녘 북촌 언덕 위 한옥 창호마다 따뜻한 불빛이 켜지며 고즈넉한 달빛 정취를 자아내는 야간 경관 거점입니다.',
       story_en: 'Warm golden lantern glow over traditional tiled roofs overlooking downtown Seoul at night.',
-      hours: '일몰 후 ~ 22:00', source: '피망 Phase 6·18 계절·야경 데이터'
+      hours: '일몰 후 ~ 22:00', source: '공공 공간데이터 Phase 6·18 계절·야경 데이터'
     },
     {
       id: 'p_hanbok_festival', cat: 'night', icon: '🎎', color: '#f43f5e',
@@ -2388,7 +2380,7 @@ function updateIntroInfo(){
       specs: ['🎎 고궁 한복 패션쇼·퍼레이드', '🏮 전통 청사초롱 야간 거리', '🎶 국악·미디어아트 융합공연'],
       story: '매년 가을 경복궁과 광화문광장, 의정부지 역사유적광장 일대에서 열리는 종로구 대표 전통문화 축제입니다.',
       story_en: 'Jongno signature autumn cultural festival featuring royal court Hanbok parades and lantern nights.',
-      hours: '매년 10월 주간·야간 특별개최', source: '피망 Phase 11 문체부 공인 대표축제 데이터'
+      hours: '매년 10월 주간·야간 특별개최', source: '공공 공간데이터 Phase 11 문체부 공인 대표축제 데이터'
     },
     {
       id: 'p_naksan_night', cat: 'night', icon: '✨', color: '#c084fc',
@@ -2399,7 +2391,7 @@ function updateIntroInfo(){
       specs: ['🧱 성곽 은하수 야간 경관조명', '🥾 완만한 데크 산책로 2.5km', '🌆 서울 일몰·야경 1위 전망대'],
       story: '혜화문에서 낙산 정상, 흥인지문으로 이어지는 2.5km 성곽 산책로로 밤이면 성벽을 따라 황금빛 조명이 켜집니다.',
       story_en: '2.5km illuminated fortress trail atop Naksan Mountain offering panoramic night views of Seoul.',
-      hours: '24시간 상시 개방', source: '피망 Phase 6·12 도시공원·트레일 데이터'
+      hours: '24시간 상시 개방', source: '공공 공간데이터 Phase 6·12 도시공원·트레일 데이터'
     },
     {
       id: 'p_jogyesa_lotus', cat: 'night', icon: '🪷', color: '#fb7185',
@@ -2410,7 +2402,7 @@ function updateIntroInfo(){
       specs: ['🪷 오색 연등 하늘 터널 연출', '🌳 500년 백송·회화나무 천연기념물', '♿ 경내 전 구간 무장애 평지'],
       story: '도심 한가운데 자리한 한국 불교의 중심 사찰로, 대웅전 앞마당을 수놓는 수만 개의 오색 연등과 소원 등불이 장관을 이룹니다.',
       story_en: 'Head temple of Korean Buddhism famous for its vibrant canopy of thousands of colorful lotus lanterns.',
-      hours: '04:00 - 21:00', source: '피망 Phase 6·11 & 쓰레드 REF #sunstation.dev'
+      hours: '04:00 - 21:00', source: '공공 공간데이터 Phase 6·11 & 쓰레드 REF #sunstation.dev'
     },
     {
       id: 'p_sunlight_observatory', cat: 'night', icon: '☀️', color: '#fde047',
@@ -2419,12 +2411,11 @@ function updateIntroInfo(){
       coords: [126.9794, 37.5730], alt: 96,
       badge: '☀️일조궤적', badge_en: '☀️Solar Arc',
       specs: ['☀️ 하지 남중고도 75.8° 실측', '🍂 춘·추분 52.4° / 동지 29.0°', '🏙️ 3D 빌딩 그림자·파사드 연동'],
-      story: '피망 Phase 18 천문 일조 프로파일이 적용된 기준점으로 상단 조명 버튼으로 사계절 태양 고도와 건물 창문 야간 불빛을 즉시 전환할 수 있습니다.',
+      story: '공공 공간데이터 Phase 18 천문 일조 프로파일이 적용된 기준점으로 상단 조명 버튼으로 사계절 태양 고도와 건물 창문 야간 불빛을 즉시 전환할 수 있습니다.',
       story_en: 'Astronomical solar trajectory anchor simulating real seasonal sun angles and building facade lighting.',
-      hours: '실시간 천문 연동', source: '피망 Phase 18 천문 일조궤적 데이터'
+      hours: '실시간 천문 연동', source: '공공 공간데이터 Phase 18 천문 일조궤적 데이터'
     },
 
-    // [거리뷰·맛집·전통시장 (Phase 3, 16, 20, REF #3 akihiro.t29 / caitlynmilos)]
     {
       id: 'p_gwancheol_micro', cat: 'street', icon: '🚶', color: '#06b6d4',
       short: '관철동200m뷰', short_en: 'Gwancheol 200m',
@@ -2434,7 +2425,7 @@ function updateIntroInfo(){
       specs: ['🚶 반경 200m 보행자 시점 강하', '🏮 청계천 수변·네온 상가 연결', '🛡️ 안심귀가 네온패스 중심축'],
       story: '종각역과 청계천 광통교 사이 활기찬 보행 전용 상업지구입니다. [1인칭 거리뷰 강하]를 누르면 거리 협곡 속으로 카메라가 즉시 다이빙합니다.',
       story_en: 'Bustling 200m pedestrian commercial district between Jonggak and Cheonggyecheon with 3D street-level dive.',
-      hours: '10:00 - 02:00', source: '피망 Phase 20 마이크로 보행존 앵커'
+      hours: '10:00 - 02:00', source: '공공 공간데이터 Phase 20 마이크로 보행존 앵커'
     },
     {
       id: 'p_cheongjinok', cat: 'street', icon: '🍲', color: '#f97316',
@@ -2445,7 +2436,7 @@ function updateIntroInfo(){
       specs: ['🍲 1937년 개업 서울미래유산', '🏅 식약처 위생등급 우수 업소', '♿ 1층 무장애 출입·엘리베이터'],
       story: '옛 청진동 해장국 골목의 역사를 간직한 1937년 개업 노포로 깊고 맑은 한우 선지 해장국과 수육으로 유명합니다.',
       story_en: 'Iconic Seoul Future Heritage restaurant serving traditional beef hangover soup since 1937.',
-      hours: '06:00 - 22:00', source: '피망 Phase 3 종로 대표 미식 데이터'
+      hours: '06:00 - 22:00', source: '공공 공간데이터 Phase 3 종로 대표 미식 데이터'
     },
     {
       id: 'p_imun', cat: 'street', icon: '🥣', color: '#fb923c',
@@ -2456,7 +2447,7 @@ function updateIntroInfo(){
       specs: ['🏅 1902년 개업 국내 최고령 식당', 'ミシュラン 미쉐린 빕구르망 선정', '🍲 100% 한우 사골 17시간 우려냄'],
       story: '1902년 문을 열어 120년 넘게 한자리를 지켜온 대한민국 공식 최고령 식당이자 백년가게입니다.',
       story_en: 'Korea oldest registered restaurant (opened in 1902), renowned for rich ox-bone soup.',
-      hours: '08:00 - 21:00', source: '피망 Phase 3 종로 노포 미식 데이터'
+      hours: '08:00 - 21:00', source: '중소벤처기업부 백년가게·종로구 (공공누리 제1유형)'
     },
     {
       id: 'p_bukchon_mandu', cat: 'street', icon: '🥟', color: '#f59e0b',
@@ -2467,7 +2458,7 @@ function updateIntroInfo(){
       specs: ['🥟 매일 아침 수제 만두 빚기', '🍽️ 종로구 안심식당 위생인증', '🚶 인사동 쌈지길 바로 옆'],
       story: '인사동 골목에서 시작해 전국적인 명물이 된 수제 만두 전문점으로 튀김만두와 피냉면이 대표 메뉴입니다.',
       story_en: 'Famous handmade dumpling eatery nestled in the heart of Insadong Cultural Street.',
-      hours: '11:00 - 20:30', source: '피망 Phase 3·16 미식·안심식당 데이터'
+      hours: '11:00 - 20:30', source: '농림축산식품부·종로구 안심식당 (공공누리 제1유형)'
     },
     {
       id: 'p_insadong_tea', cat: 'street', icon: '🍵', color: '#10b981',
@@ -2478,7 +2469,7 @@ function updateIntroInfo(){
       specs: ['🏅 식약처 공인 모범음식점 등급', '🍵 전통 대추차·오미자차·한과', '🏡 한옥 중정 정원 찻집'],
       story: '고즈넉한 한옥 마당에서 수제 쌍화차, 대추차와 다식·한과를 즐길 수 있는 종로구 지정 모범 안심식당 골목입니다.',
       story_en: 'Certified model hygiene dining alley featuring serene Hanok courtyard tea houses.',
-      hours: '10:00 - 22:00', source: '피망 Phase 3·16 안심식당 공인 데이터'
+      hours: '10:00 - 22:00', source: '식약처·종로구 모범음식점 공인 데이터 (공공누리 제1유형)'
     },
     {
       id: 'p_gwangjang_food', cat: 'street', icon: '🥞', color: '#ef4444',
@@ -2489,7 +2480,7 @@ function updateIntroInfo(){
       specs: ['🥞 녹두빈대떡·육회·마약김밥', '🌐 넷플릭스 글로벌 스트리트푸드', '🚇 종로5가역·을지로4가역 직결'],
       story: '1905년 개설된 대한민국 최초의 상설시장으로 고소한 녹두빈대떡과 육회 골목이 전 세계 여행객의 발길을 사로잡습니다.',
       story_en: 'Korea first permanent market (1905), globally famous for mung-bean pancakes and street food.',
-      hours: '09:00 - 23:00', source: '피망 Phase 1·3 전통시장·미식 데이터'
+      hours: '09:00 - 23:00', source: '소상공인시장진흥공단 전통시장 (공공누리 제1유형)'
     },
     {
       id: 'p_ikseondong', cat: 'street', icon: '☕', color: '#ec4899',
@@ -2500,10 +2491,9 @@ function updateIntroInfo(){
       specs: ['🏡 1920년 정세권 선생 도시한옥', '☕ 플랜테리어 카페·베이커리 80곳', '🚶 보행 전용 아케이드 골목'],
       story: '1920년대 서민을 위해 지어진 최초의 근대 도시한옥 단지가 감각적인 카페와 레스토랑 골목으로 재탄생한 명소입니다.',
       story_en: '1920s urban Hanok cluster transformed into Seoul trendiest narrow alley of cafes and bistros.',
-      hours: '11:00 - 22:30', source: '피망 Phase 3·20 골목 보행존 데이터'
+      hours: '11:00 - 22:30', source: '종로구 골목상권·보행환경 (공공누리 제1유형) & OpenStreetMap(ODbL)'
     },
 
-    // [안심귀가·대피소·행정·키오스크 (Phase 2, 5, 10, 13, 14, 19)]
     {
       id: 'p_jongno_office', cat: 'safety', icon: '🏛️', color: '#3b82f6',
       short: '종로구청민원실', short_en: 'Jongno Office',
@@ -2513,7 +2503,7 @@ function updateIntroInfo(){
       specs: ['🏛️ 평일 09:00~18:00 통합민원실', '📄 24시간 무인민원발급기 상시운영', '☎️ 대표전화 02-2148-1114'],
       story: '종로구 행정의 중심 거점으로 여권·가족관계·세무 통합 민원실과 24시간 무인민원발급기, 전기차 급속충전소가 운영됩니다.',
       story_en: 'Administrative headquarters of Jongno-gu offering integrated civil services and 24-hour kiosks.',
-      hours: '09:00 - 18:00 (무인발급기 24시간)', source: '피망 Phase 10 행정민원 표준 데이터'
+      hours: '09:00 - 18:00 (무인발급기 24시간)', source: '행정안전부·종로구청 민원행정 (공공누리 제1유형)'
     },
     {
       id: 'p_safe_neon_hub', cat: 'safety', icon: '🛡️', color: '#06b6d4',
@@ -2524,7 +2514,7 @@ function updateIntroInfo(){
       specs: ['🛡️ 3D 시안(Cyan) 네온 안심경로', '🚨 경찰서 직통 SOS 비상벨 연동', '📹 관내 지능형 CCTV 326개소'],
       story: '야간 보행자의 안전한 귀가를 위해 노면 로고젝터, LED 보안등, SOS 비상벨, 326개 CCTV가 3D 네온 패스로 연결된 안심귀갓길입니다.',
       story_en: 'Illuminated safe-return pedestrian corridor linked with SOS emergency bells and 326 smart CCTVs.',
-      hours: '24시간 통합관제센터 실시간 모니터링', source: '피망 Phase 10·19 안심귀가 네온패스 데이터'
+      hours: '24시간 통합관제센터 실시간 모니터링', source: '서울시·종로구 안심귀갓길 공공데이터 (공공누리 제1유형)'
     },
     {
       id: 'p_safe_kiosk', cat: 'safety', icon: '📦', color: '#8b5cf6',
@@ -2535,7 +2525,7 @@ function updateIntroInfo(){
       specs: ['📦 1인 가구·여성 안심 무인수령', '🕒 48시간 무료 보관·CCTV 녹화', '📱 휴대폰 인증번호 원터치 개방'],
       story: '1인 가구와 구민이 대면 없이 24시간 안전하게 택배를 수령할 수 있는 지자체 스마트 안심무인택배함입니다.',
       story_en: '24-hour smart public parcel locker ensuring safe, contactless delivery pickup for residents.',
-      hours: '24시간 연중무휴', source: '피망 Phase 14 스마트 공공키오스크 데이터'
+      hours: '24시간 연중무휴', source: '서울시 안심무인택배함 공공데이터 (공공누리 제1유형)'
     },
     {
       id: 'p_shelter_school', cat: 'safety', icon: '⛺', color: '#10b981',
@@ -2546,7 +2536,7 @@ function updateIntroInfo(){
       specs: ['⛺ 지진·재난 공인 옥외대피소', '👥 최대 수용인원 1,500명', '🚑 응급구호함·비상급수시설 구비'],
       story: '지진 및 도심 재난 발생 시 북촌·가회동·인사동 권역 시민과 관광객이 즉시 대피할 수 있는 공인 옥외대피소입니다.',
       story_en: 'Designated outdoor earthquake evacuation shelter with a capacity of 1,500 people.',
-      hours: '비상시 즉시 개방', source: '피망 Phase 5 행안부 안전대피소 데이터'
+      hours: '비상시 즉시 개방', source: '행정안전부 국민재난안전포털 대피소 (공공누리 제1유형)'
     },
     {
       id: 'p_shelter_park', cat: 'safety', icon: '⛺', color: '#22c55e',
@@ -2557,7 +2547,7 @@ function updateIntroInfo(){
       specs: ['⛺ 도심 중심부 열린 광장 대피소', '👥 최대 수용인원 2,200명', '📡 재난 예·경보 방송시스템'],
       story: '종로구청 및 광화문 업무지구 인접 개방형 공원 대피소로 최대 2,200명을 수용할 수 있는 안전 거점입니다.',
       story_en: 'Central open-air disaster evacuation point accommodating up to 2,200 citizens.',
-      hours: '24시간 상시 개방', source: '피망 Phase 5 안전대피소 데이터'
+      hours: '24시간 상시 개방', source: '행정안전부 지진옥외대피소 공공데이터 (공공누리 제1유형)'
     },
     {
       id: 'p_shelter_gym', cat: 'safety', icon: '🏟️', color: '#14b8a6',
@@ -2568,7 +2558,7 @@ function updateIntroInfo(){
       specs: ['🏟️ 내진설계 특등급 실내체육관', '👥 최대 수용인원 3,000명', '⚡ 비상자가발전·구호물자 비축'],
       story: '기상 악화나 대규모 재난 시 최대 3,000명이 실내에서 안전하게 머물 수 있는 광역 구호 대피시설입니다.',
       story_en: 'Seismic-reinforced indoor gymnasium serving as a 3,000-person emergency relief shelter.',
-      hours: '06:00 - 22:00 (재난시 24시간)', source: '피망 Phase 5 안전대피소 데이터'
+      hours: '06:00 - 22:00 (재난시 24시간)', source: '행정안전부 지진옥외대피소 공공데이터 (공공누리 제1유형)'
     },
     {
       id: 'p_sports_center', cat: 'safety', icon: '⚽', color: '#34d399',
@@ -2579,7 +2569,7 @@ function updateIntroInfo(){
       specs: ['🏸 다목적 체육관·탁구장·피트니스', '♿ 장애인 겸용 샤워실·엘리베이터', '💻 종로구 시설관리공단 온라인예약'],
       story: '종로구민과 직장인의 건강 증진을 위한 공공 체육시설로 배드민턴, 탁구, 헬스 프로그램이 상시 운영됩니다.',
       story_en: 'Public sports complex offering badminton, table tennis, and fitness facilities.',
-      hours: '06:00 - 22:00', source: '피망 Phase 13 공공체육시설 데이터'
+      hours: '06:00 - 22:00', source: '공공 공간데이터 Phase 13 공공체육시설 데이터'
     }
   ];
 
@@ -2589,7 +2579,6 @@ function updateIntroInfo(){
   var selectedNode = null;
   var customOrbitTarget = null;
 
-  // 2. Three.js 3D 비콘 & 네온패스 & 청계천 물결/등불 & 실시간 3D 열차/버스 생성
   var spatialBeaconGroup = new THREE.Group();
   var neonSafeGroup = new THREE.Group();
   var lanternGroup = new THREE.Group();
@@ -2657,7 +2646,6 @@ function updateIntroInfo(){
     });
   }
 
-  // 3. 피망 Phase 19: 안심귀가 3D 네온 패스 & SOS 비상벨 돔
   function buildSafeReturnNeonCorridors(){
     var corridors = [
       [
@@ -2701,7 +2689,6 @@ function updateIntroInfo(){
     });
   }
 
-  // 4. 쓰레드 REF #1 (#BAT8R078eF): 실시간 주행 3D 지하철(3·5호선) & 종로 간선버스 스트림
   var TRANSIT_VEHICLES = [];
   function buildLive3DTransitStreams(){
     var routes = [
@@ -2778,7 +2765,6 @@ function updateIntroInfo(){
     });
   }
 
-  // 5. 쓰레드 REF #2 (#lani_0319 / #sunstation.dev): 청계천 물결 리본 & 소원 등불 160개 부유
   var LANTERN_ITEMS = [];
   var cheonggyeRibbon = null;
   function buildCheonggyeAndLanterns(){
@@ -2829,7 +2815,6 @@ function updateIntroInfo(){
     }
   }
 
-  // 6. 3D AR 플로팅 콜아웃 생성 (컴팩트 shortName 적용으로 화면 밖 잘림 원천 차단!)
   var calloutDOMMap = {};
   function buildARCalloutDOM(){
     var container = document.getElementById('ar-callout-layer');
@@ -2860,7 +2845,6 @@ function updateIntroInfo(){
       for(var hi=0; hi<HIER.items.length; hi++){ if(HIER.items[hi].sp) HIER.items[hi].sp.visible = false; }
     }
 
-    // 1) 비콘 회전 & 링 펄스
     SPATIAL_NODES.forEach(function(nd){
       var g = node3DMap[nd.id];
       if(!g) return;
@@ -2873,7 +2857,6 @@ function updateIntroInfo(){
       }
     });
 
-    // 2) 실시간 3D 지하철·버스 이동 및 AR 태그 투영 (겹침 방지를 위해 화면 내 안전영역만 표시)
     var showTransitTags = (currentCat === 'transit' || currentCat === 'all');
     var placedBoxes = [];
 
@@ -2885,7 +2868,6 @@ function updateIntroInfo(){
       tv.mesh.position.copy(pos);
       tv.mesh.lookAt(pos.x + tangent.x, pos.y, pos.z + tangent.z);
 
-      // 전체 탭에서는 대표 차량 2대만, 교통 탭에서는 전체 차량 태그 표시
       if(!showTransitTags || (currentCat === 'all' && idx > 1)){
         tv.tag.style.display = 'none';
       } else {
@@ -2908,7 +2890,6 @@ function updateIntroInfo(){
       }
     });
 
-    // 3) 청계천 물결 & 소원 등불 부유
     if(cheonggyeRibbon){
       cheonggyeRibbon.material.opacity = 0.65 + 0.2 * Math.sin(now * 0.003);
     }
@@ -2919,7 +2900,6 @@ function updateIntroInfo(){
       lt.mesh.position.x = lt.baseX + Math.sin(now * 0.0015 + lt.phase) * 8;
     });
 
-    // 4) 커스텀 360° 거점 선회
     if(customOrbitTarget){
       var ang = now * 0.00055;
       var rad = customOrbitTarget.radius || 320;
@@ -2932,7 +2912,6 @@ function updateIntroInfo(){
       camera.lookAt(customOrbitTarget.x, customOrbitTarget.y + 25, customOrbitTarget.z);
     }
 
-    // 5) 3D AR 플로팅 콜아웃 스마트 충돌 방지 투영 (좌우 여백 78px 확보로 잘림 0%, 상하 44px 이격으로 겹침 0%)
     var candidates = [];
     SPATIAL_NODES.forEach(function(nd){
       var el = calloutDOMMap[nd.id];
@@ -3001,7 +2980,6 @@ function updateIntroInfo(){
     _origRender(s, c);
   };
 
-  // 7. 3D 공간 거점 포커스 & 인앱 상세 카드 연동
   window.focusSpatialNode = function(nodeId, customDist, customAlt){
     var nd = SPATIAL_NODES.find(function(n){ return n.id === nodeId; });
     if(!nd) return;
@@ -3110,7 +3088,6 @@ function updateIntroInfo(){
     showSpatialToast('✨ 인앱 3D 보행경로 연결 완료: 약 ' + distM + 'm (도보 약 ' + walkMin + '분)');
   };
 
-  // 8. 카테고리 전환 & 하단 미니 스팟 캐러셀 렌더링
   function renderSpotCarousel(){
     var wrap = document.getElementById('spot-carousel');
     if(!wrap) return;
@@ -3170,7 +3147,7 @@ function updateIntroInfo(){
       var xz5 = toXZ(126.9835, 37.5750);
       targetLookAt = new THREE.Vector3(xz5[0], 30, xz5[1]);
       targetCamPos = new THREE.Vector3(xz5[0], 920, xz5[1] + 1180);
-      showSpatialToast('🛡️ 피망 Phase 19 안심귀가 네온패스 & 대피소·스마트행정');
+      showSpatialToast('🛡️ 공공 공간데이터 Phase 19 안심귀가 네온패스 & 대피소·스마트행정');
     } else {
       applySpatialAtmosphereMode(0);
       targetLookAt = new THREE.Vector3(0, 20, 0);
@@ -3203,7 +3180,6 @@ function updateIntroInfo(){
     }
   };
 
-  // 10. 피망 Phase 18 사계절 일조궤적 + 주야간 분위기 통합 스위치
   var ATMO_MODES = [
     { key: 'day',    alt: 52.4, label_ko: '☀️ 주간', label_en: '☀️ Day' },
     { key: 'day',    alt: 75.8, label_ko: '🌿 하지76°', label_en: '🌿 Sol76°' },
@@ -3237,7 +3213,6 @@ function updateIntroInfo(){
     showSpatialToast((currentLang === 'en' ? m.label_en : m.label_ko) + ' 3D 조명·일조궤적 적용');
   };
 
-  // D: 실시간 시간/일조/야간등불 슬라이더 (06:00 ~ 23:00 연속 제어)
   window.onSpatialTimeSlider = function(val){
     var hr = parseFloat(val) || 13.0;
     var hh = Math.floor(hr);
@@ -3270,7 +3245,6 @@ function updateIntroInfo(){
     if(btn) btn.textContent = tag;
   };
 
-  // C: 피망 Phase 2 공인 5대 명소 연속 카메라 비행 투어 (Sky Trail Auto-Flight)
   var skyTourTimer = null;
   var skyTourIdx = 0;
   var SKY_TOUR_STOPS = ['p_gyeongbokgung', 'p_bukchon', 'p_changdeokgung', 'p_insadong', 'p_cheonggye_lantern'];
@@ -3325,7 +3299,6 @@ function updateIntroInfo(){
     skyTourTimer = setInterval(flyStep, 3600);
   };
 
-  // 11. 피망 Phase 7 다국어(한/영) 실시간 전환 엔진
   window.toggleSpatialLang = function(){
     currentLang = (currentLang === 'ko') ? 'en' : 'ko';
     var langBtn = document.getElementById('btn-lang-i18n');
@@ -3334,7 +3307,7 @@ function updateIntroInfo(){
     document.getElementById('ui-brand-title').textContent =
       (currentLang === 'en') ? 'Jongno 3D Spatial Map' : '서울 종로구 3D 공간지도';
     document.getElementById('ui-brand-sub').textContent =
-      (currentLang === 'en') ? '3,581 3D Bldgs · Phase 1-20' : '실측 3,581동 · Phase 1-20 통합';
+      (currentLang === 'en') ? '3,581 3D Bldgs · KOGL·ODbL·CC BY 4.0' : '실측 3,581동 · 공공누리·ODbL·CC BY 4.0';
 
     var catLabels = {
       all:      { ko: '전체 공간', en: 'All Spaces' },
@@ -3385,7 +3358,7 @@ function updateIntroInfo(){
   });
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('/service-worker.js').catch(function(){});
+      navigator.serviceWorker.register('../../service-worker.js').catch(function(){});
     });
   }
   window.triggerSpatialPWA = function(){
@@ -3396,7 +3369,6 @@ function updateIntroInfo(){
     }
   };
 
-  // 13. 부드러운 1손가락 회전(Orbit) + 2손가락 핀치줌/패닝 터치 컨트롤러
   (function initSmoothSpatialTouch(){
     var el = renderer.domElement;
     el.style.touchAction = 'none';
@@ -3498,7 +3470,6 @@ function updateIntroInfo(){
     }, { passive: false });
   })();
 
-  // 14. 초기화 실행
   buildSpatial3DBeacons();
   buildSafeReturnNeonCorridors();
   buildLive3DTransitStreams();
