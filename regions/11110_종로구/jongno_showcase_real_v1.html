@@ -3016,7 +3016,7 @@ function updateIntroInfo(){
     addPalaceHall(landmarkArchGroup, 126.9769, 37.5810, { w: 34, d: 20, baseH: 4.5, colH: 8.0, roofH: 8.0, doubleRoof: false });
 
     var ghXZ = toXZ(126.9755, 37.5797);
-    var ghGrp = new THREE.Group();
+    var ghGrp = new THREE.Group(); window.__procGH = ghGrp;
     ghGrp.position.set(ghXZ[0], 0, ghXZ[1]);
     var pondBorder = new THREE.Mesh(new THREE.BoxGeometry(118, 2.2, 104), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
     pondBorder.position.y = 1.1;
@@ -4078,10 +4078,11 @@ function updateIntroInfo(){
             holder.rotation.y = Math.PI; // 정남향 정렬
             if(window.__procGJ) window.__procGJ.visible = false;
           } else if(def.key === 'ghr'){
-            // 경회루 블록: y=0 지면 스냅 및 경회루 축선 정합
-            var xz = toXZ(man.coordinates[0], man.coordinates[1]);
+            // 경회루 블록: 궁궐 서쪽 회랑(X=-299) 침범 방지 정합 좌표(126.9755, 37.5797) 및 정남향 정렬
+            var xz = toXZ(126.9755, 37.5797);
             holder.position.set(xz[0], 0, xz[1]);
             holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
+            if(window.__procGH) window.__procGH.visible = false;
           } else if(def.key === 'cgc'){
             // [제미나이 버그픽스] 청계천 수로 지면 스냅 및 원점 정합
             var xz = toXZ(man.coordinates[0], man.coordinates[1]);
