@@ -4159,6 +4159,10 @@ function updateIntroInfo(){
       bar.appendChild(b);
     });
     document.body.appendChild(bar);
+    // [안티 긴급 개선] 페이지 시작 시 피망 3대 블록(근정전·경회루·청계천) 기본 자동 마운트
+    setTimeout(function(){
+      LEGO_BLOCKS.forEach(function(d){ legoLoad(d); });
+    }, 800);
     var m = /lego=([a-z]+)/.exec(location.hash || '');
     if(m) setTimeout(function(){ window.flyToLegoBlock(m[1]); }, 1500);
   })();
