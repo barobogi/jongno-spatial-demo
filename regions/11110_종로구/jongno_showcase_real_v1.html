@@ -3998,6 +3998,7 @@ function updateIntroInfo(){
 
   var LEGO_BLOCKS = [
     { key: 'gj', label: '🏯 근정전 블록 (지면착지·기와정상화)', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
+    { key: 'ghr', label: '🏛️ 경회루 블록 (48열주·경회지연못·3석교)', dir: 'lego_blocks/03045_HERO_p02_경복궁_경회루/', fwdDeg: 180, lookUp: 12, camBack: 140, camUp: 60 },
     { key: 'cgc', label: '🌊 청계천 단독 뷰 (주변건물 숨김)', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 110, camUp: 75 }
   ];
   var legoLoaded = {};
@@ -4076,6 +4077,11 @@ function updateIntroInfo(){
             holder.position.set(xz[0], 0, xz[1]);
             holder.rotation.y = Math.PI; // 정남향 정렬
             if(window.__procGJ) window.__procGJ.visible = false;
+          } else if(def.key === 'ghr'){
+            // 경회루 블록: y=0 지면 스냅 및 경회루 축선 정합
+            var xz = toXZ(man.coordinates[0], man.coordinates[1]);
+            holder.position.set(xz[0], 0, xz[1]);
+            holder.rotation.y = (def.fwdDeg - man.heading) * Math.PI / 180;
           } else if(def.key === 'cgc'){
             // [제미나이 버그픽스] 청계천 수로 지면 스냅 및 원점 정합
             var xz = toXZ(man.coordinates[0], man.coordinates[1]);
