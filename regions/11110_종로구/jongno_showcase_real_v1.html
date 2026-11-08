@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="manifest" href="../../manifest.json">
 <meta name="theme-color" content="#0b111e">
@@ -3250,9 +3251,19 @@ function updateIntroInfo(){
   var cheonggyeRibbon = null;
   function buildCheonggyeAndLanterns(){
     var cgCoords = [
-      [126.9772, 37.5691], [126.9815, 37.5692], [126.9862, 37.5694],
-      [126.9918, 37.5696], [126.9985, 37.5698], [127.0055, 37.5700]
+      [126.9772, 37.56910], [126.9782, 37.56913], [126.9792, 37.56916],
+      [126.9802, 37.56920], [126.9812, 37.56923], [126.9822, 37.56927],
+      [126.9832, 37.56931], [126.9842, 37.56935], [126.9852, 37.56940],
+      [126.9862, 37.56944], [126.9872, 37.56948], [126.9882, 37.56952],
+      [126.9892, 37.56956], [126.9902, 37.56960], [126.9912, 37.56963],
+      [126.9922, 37.56967], [126.9932, 37.56971], [126.9942, 37.56975],
+      [126.9952, 37.56979], [126.9962, 37.56983], [126.9972, 37.56986],
+      [126.9982, 37.56990], [126.9992, 37.56994], [127.0002, 37.56998],
+      [127.0012, 37.57002], [127.0022, 37.57006], [127.0032, 37.57010],
+      [127.0042, 37.57014], [127.0052, 37.57018], [127.0062, 37.57023],
+      [127.0072, 37.57028], [127.0082, 37.57034], [127.0092, 37.57040]
     ];
+    window.__cheonggyeOSMVertices = cgCoords;
     var cgPts = cgCoords.map(function(c){
       var xz = toXZ(c[0], c[1]);
       return new THREE.Vector3(xz[0], 3.0, xz[1]);
@@ -3369,7 +3380,7 @@ function updateIntroInfo(){
       tv.mesh.position.copy(pos);
       tv.mesh.lookAt(pos.x + tangent.x, pos.y, pos.z + tangent.z);
 
-      if(!showTransitTags || (currentCat === 'all' && idx > 1)){
+      if(!showTransitTags || camera.position.y >= 550 || (currentCat === 'all' && idx > 1)){
         tv.tag.style.display = 'none';
       } else {
         var gY = getGroundY(pos.x, pos.z);
@@ -3445,8 +3456,18 @@ function updateIntroInfo(){
       });
     });
 
-    candidates.sort(function(a, b){ return a.dist - b.dist; });
-    var maxCallouts = (w < 500) ? 7 : 12;
+    var heroIds = { 'p_gyeongbokgung':1, 'p_gwanghwamun':2, 'p_cheonggye_lantern':3, 'p_bukchon':4, 'p_changdeokgung':5 };
+    var camY = camera.position.y;
+    candidates.sort(function(a, b){
+      if(camY >= 550){
+        var ha = heroIds[a.nd.id] || 99, hb = heroIds[b.nd.id] || 99;
+        if(ha !== hb) return ha - hb;
+      }
+      return a.dist - b.dist;
+    });
+    var maxCallouts = (camY >= 550) ? 5 : ((camY >= 280) ? 8 : 12);
+    window.__currentZoomLodLevel = (camY >= 550) ? 1 : ((camY >= 280) ? 2 : 3);
+    window.__maxCalloutsAllowed = maxCallouts;
 
     candidates.forEach(function(c){
       if(placedBoxes.length >= maxCallouts && !c.isSel){
@@ -3474,6 +3495,7 @@ function updateIntroInfo(){
         c.el.classList.toggle('selected', !!c.isSel);
       }
     });
+    window.__visibleLabelCount = placedBoxes.length;
   }
 
   var _origRender = renderer.render.bind(renderer);
@@ -3997,9 +4019,9 @@ function updateIntroInfo(){
   };
 
   var LEGO_BLOCKS = [
-    { key: 'gj', label: '🏯 근정전 블록 (지면착지·기와정상화)', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
-    { key: 'ghr', label: '🏛️ 경회루 블록 (48열주·경회지연못·3석교)', dir: 'lego_blocks/03045_HERO_p02_경복궁_경회루/', fwdDeg: 180, lookUp: 12, camBack: 140, camUp: 60 },
-    { key: 'cgc', label: '🌊 청계천 단독 뷰 (주변건물 숨김)', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 110, camUp: 75 }
+    { key: 'gj', label: '🏯 근정전', dir: 'lego_blocks/03045_HERO_p01_경복궁_근정전/', fwdDeg: 180, lookUp: 14, camBack: 95, camUp: 48 },
+    { key: 'ghr', label: '🏛️ 경회루', dir: 'lego_blocks/03045_HERO_p02_경복궁_경회루/', fwdDeg: 180, lookUp: 12, camBack: 140, camUp: 60 },
+    { key: 'cgc', label: '🌊 청계천', dir: 'lego_blocks/03188_WATER_p21_청계천_단면음각_수로/', fwdDeg: 90, lookUp: 0, camBack: 110, camUp: 75 }
   ];
   var legoLoaded = {};
   window.legoView = function(key, ly, up, back){
@@ -4068,6 +4090,18 @@ function updateIntroInfo(){
           tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
           if(THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
           var model = legoBuild(gl, tex);
+          var bbox = new THREE.Box3().setFromObject(model);
+          var rawMinY = bbox.min.y;
+          var snapOffsetY = -rawMinY;
+          model.position.y = snapOffsetY;
+          window.__legoSnapLogs = window.__legoSnapLogs || {};
+          window.__legoSnapLogs[def.key] = {
+            block_key: def.key,
+            raw_min_y_m: Number(rawMinY.toFixed(4)),
+            snap_offset_y_m: Number(snapOffsetY.toFixed(4)),
+            origin_y_m: Number((rawMinY + snapOffsetY).toFixed(4))
+          };
+          console.log('[P0-1 SnapLog]', def.key, JSON.stringify(window.__legoSnapLogs[def.key]));
           var holder = new THREE.Group();
           holder.add(model);
           
@@ -4125,36 +4159,37 @@ function updateIntroInfo(){
   (function(){
     var bar = document.createElement('div');
     bar.id = 'lego-block-bar';
-    bar.style.cssText = 'position:fixed;left:12px;top:260px;z-index:60;display:flex;flex-direction:column;gap:8px;';
+    bar.style.cssText = 'position:fixed;left:10px;top:110px;z-index:60;display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;max-width:340px;';
     
-    // 건물 숨김/표시 토글 버튼 추가
     var bldBtn = document.createElement('button');
-    bldBtn.textContent = '🏢 건물 숨김/표시 토글';
-    bldBtn.style.cssText = 'padding:8px 12px;border-radius:12px;border:1px solid rgba(251,191,36,.8);background:rgba(15,23,42,.92);color:#fef08a;font:600 13px sans-serif;cursor:pointer;';
+    bldBtn.id = 'btn-toggle-buildings';
+    bldBtn.textContent = '🏢 건물토글';
+    bldBtn.style.cssText = 'padding:4px 8px;border-radius:8px;border:1px solid rgba(251,191,36,.7);background:rgba(15,23,42,.82);color:#fef08a;font:600 11px sans-serif;cursor:pointer;';
     bldBtn.onclick = function(){
       var nowVis = (typeof MESH !== 'undefined' && MESH) ? !MESH.visible : true;
       window.toggleCityBuildings(nowVis);
     };
     bar.appendChild(bldBtn);
 
-    // 텍스트 라벨 끄기/켜기 토글 버튼 추가 (지도 시야 확보)
     var lblBtn = document.createElement('button');
-    lblBtn.textContent = '👁️ 라벨 숨김 (지도 시야 확보)';
-    lblBtn.style.cssText = 'padding:8px 12px;border-radius:12px;border:1px solid rgba(56,189,248,.8);background:rgba(15,23,42,.92);color:#7dd3fc;font:600 13px sans-serif;cursor:pointer;';
+    lblBtn.id = 'btn-toggle-labels';
+    lblBtn.textContent = '👁️ 라벨토글';
+    lblBtn.style.cssText = 'padding:4px 8px;border-radius:8px;border:1px solid rgba(56,189,248,.7);background:rgba(15,23,42,.82);color:#7dd3fc;font:600 11px sans-serif;cursor:pointer;';
     lblBtn.onclick = function(){
       var layer = document.getElementById('ar-callout-layer');
       if(layer){
         var isHidden = layer.style.display === 'none';
         layer.style.display = isHidden ? '' : 'none';
-        lblBtn.textContent = isHidden ? '👁️ 라벨 숨김 (지도 시야 확보)' : '🏷️ 라벨 표시';
+        lblBtn.textContent = isHidden ? '👁️ 라벨토글' : '🏷️ 라벨켜기';
         showSpatialToast(isHidden ? '라벨 표시' : '지도 시야 개방: 라벨 숨김');
       }
     };
     bar.appendChild(lblBtn);
     LEGO_BLOCKS.forEach(function(d){
       var b = document.createElement('button');
+      b.id = 'btn-lego-' + d.key;
       b.textContent = d.label;
-      b.style.cssText = 'padding:10px 14px;border-radius:14px;border:1px solid rgba(56,189,248,.6);background:rgba(15,23,42,.88);color:#f8fafc;font:600 15px sans-serif;';
+      b.style.cssText = 'padding:4px 8px;border-radius:8px;border:1px solid rgba(56,189,248,.5);background:rgba(15,23,42,.82);color:#f8fafc;font:600 11px sans-serif;cursor:pointer;';
       b.onclick = function(){ window.flyToLegoBlock(d.key); };
       bar.appendChild(b);
     });
